@@ -1,0 +1,63 @@
+durée: 3 jours
+
+Pré-requis : - Connaissances de base en développement logiciel (peu importe le langage). - Savoir utiliser un éditeur de code (comme VS Code). - Notions générales sur le fonctionnement de l’IA ou curiosité pour les outils intelligents.
+
+Objectifs : Comprendre le fonctionnement des modèles LLM open-source comme Llama - Utiliser Ollama pour exécuter des modèles localement - Exploiter efficacement GitHub Copilot dans leurs environnements de développement - Naviguer et coder avec assistance dans Cursor IDE - Identifier les cas d’usage pertinents pour chaque outil et les combiner intelligemment dans leur workflow.
+
+Sanction : Attestation de fin de formation mentionnant le résultat des acquis
+
+Référence : INT102521-F
+
+Accessibilité : Si vous êtes en situation de handicap, nous sommes en mesure de vous accueillir, n'hésitez pas à nous contacter à referenthandicap@dawan.fr, nous étudierons ensemble vos besoins
+
+-----------------
+Plan
+-----------------
+
+Introduction aux outils d'IA générative pour le développement
+
+Présentation générale sur les notions centrales: IA, LLM, GPT, Agent
+Objectifs de la formation
+Cas d’usage concrets en entreprise
+
+
+Comment choisir un modèle ?
+
+Présentation de des caractéristiques principales d'un modèle
+Déterminer les capacités en mémoire pour un modèle: les paramètres 
+Ajuster la fenêtre de contexte d'un modèle à des capacités réelles
+Connaître les moteurs et les formats de modèles
+
+
+Utiliser Ollama pour exploiter Llama localement
+
+Présentation de l'outil Ollama
+Installation et configuration (Windows, macOS, Linux) avec docker compose
+Gestion des modèles avec Ollama (pull, run, list, show)
+Lancement de modèles en local avec Ollama
+Interaction avec des modèles via l'interface CLI ou HTTP
+Démonstration : utilisation de Llama 3 avec Ollama
+
+
+Le harnais: assistant de développement intégré
+
+Présenter des assistants populaires
+Fonctionnalités principales: brainstorming, documentation, implémentations, tests, revues
+Utiliser les composants indispensables: commandes, skills, agents, MCPs
+Confidentialité et gestion des données
+Travailler avec un modèle local dans OpenCode (ex : branchement Ollama)
+
+Exécuter un flux de développement avec l'assistant
+
+Déterminer les templates de descriptions de spécifications
+Configurer un flux de travail ave git: branching, commit automatique, push conditionné, Merge/Pull Request
+Ajuster les permissions pour automatiser le flux en sécurité
+Atelier : Réaliser un flux TDD dans le langage de programmation donné
+
+Perspectives, limites et éthique
+
+Impacts sur le métier de développeur
+Risques d’hallucination et relecture critique
+Dépendance aux outils et souveraineté numérique
+Éthique, propriété intellectuelle et conformité
+Discussion ouverte : l’IA dans les pratiques professionnelles

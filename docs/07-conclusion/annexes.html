@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Support interactif de formation Ollama et IA générative pour le développement : 📎 — Annexes">
+<title>📎 — Annexes</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #30363d;
+  --primary: #f0883e; --primary2: #ffa657;
+  --success: #3fb950; --warning: #d29922; --danger: #f85149;
+  --text: #e6edf3; --text-muted: #8b949e; --code-bg: #010409; --radius: 10px;
+  --topbar-h: 3.25rem;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+  --primary: #bc4c00; --primary2: #953800;
+  --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+  --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+    --primary: #bc4c00; --primary2: #953800;
+    --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+    --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.7; transition: background .2s, color .2s; }
+
+/* TOPBAR — fixe, ne bouge jamais au scroll */
+.topbar {
+  position: sticky; top: 0; z-index: 200; height: var(--topbar-h);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .9rem; padding: 0 1rem;
+}
+.topbar .badge {
+  flex: 0 0 auto; background: var(--primary); color: #0d1117;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.topbar a.chapter-title {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: .5rem;
+  text-decoration: none; color: var(--text); font-weight: 700; font-size: .92rem;
+  overflow: hidden;
+}
+.topbar a.chapter-title:hover { color: var(--primary); }
+.topbar a.chapter-title .num { color: var(--primary); flex: 0 0 auto; }
+.topbar a.chapter-title .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-links { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem; }
+.topbar-link {
+  white-space: nowrap; padding: .4rem .8rem; border: 1px solid var(--border); border-radius: 20px;
+  font-size: .8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all .2s;
+}
+.topbar-link:hover { color: var(--primary); border-color: var(--primary); }
+.theme-toggle {
+  flex: 0 0 auto; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: .4rem .7rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+/* LAYOUT — sidebar gauche + contenu */
+.layout { display: flex; align-items: flex-start; }
+.sidebar {
+  flex: 0 0 280px; width: 280px;
+  position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; border-right: 1px solid var(--border); background: var(--surface);
+  padding: 1.25rem 1rem 2rem;
+}
+.objectifs {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1.25rem;
+}
+.objectifs-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.objectifs ul { margin: .4rem 0 0 1.1rem; }
+.objectifs li { font-size: .82rem; color: var(--text-muted); margin-bottom: .3rem; line-height: 1.4; }
+.side-nav { display: flex; flex-direction: column; gap: .1rem; }
+.side-nav button {
+  text-align: left; background: none; border: none; border-left: 3px solid transparent;
+  color: var(--text-muted); padding: .55rem .7rem; font-size: .87rem; font-weight: 500;
+  cursor: pointer; border-radius: 0 6px 6px 0; transition: all .15s;
+}
+.side-nav button:hover { color: var(--text); background: var(--surface2); }
+.side-nav button.active { color: var(--primary); border-left-color: var(--primary); background: var(--surface2); font-weight: 600; }
+.side-nav-sep { height: 1px; background: var(--border); margin: .6rem 0; }
+
+.content { flex: 1 1 auto; min-width: 0; }
+.tab-content { display: none; padding: 2rem 2.5rem 4rem; max-width: 1100px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* SECTIONS */
+h2 { font-size: 1.25rem; color: var(--primary2); margin: 1.8rem 0 .8rem; border-left: 3px solid var(--primary); padding-left: .75rem; }
+h3 { font-size: 1.05rem; color: var(--text); margin: 1.4rem 0 .6rem; }
+p { margin-bottom: .9rem; }
+ul, ol { padding-left: 1.4rem; margin-bottom: .9rem; }
+li { margin-bottom: .35rem; }
+
+/* RESSOURCES — liste sous forme de cartes plutôt que de puces */
+#tab-ressources ul { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: .5rem; }
+#tab-ressources li {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: .75rem 1rem; margin-bottom: 0;
+}
+#tab-ressources li a { color: var(--primary2); font-weight: 600; text-decoration: none; }
+#tab-ressources li a:hover { text-decoration: underline; }
+
+/* AIDE — divulgation progressive pas-à-pas */
+details.aide { margin-top: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+details.aide summary {
+  cursor: pointer; padding: .8rem 1.1rem; font-weight: 600; color: var(--primary);
+  list-style: none; display: flex; align-items: center; gap: .5rem;
+}
+details.aide summary::-webkit-details-marker { display: none; }
+details.aide summary::before { content: "▶"; font-size: .7rem; transition: transform .15s; }
+details.aide[open] summary::before { transform: rotate(90deg); }
+details.aide .aide-body { padding: 0 1.1rem 1.1rem; border-top: 1px solid var(--border); margin-top: .2rem; padding-top: 1rem; }
+img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+
+/* EXERCICE — un bloc par atelier, avec son aide pas-à-pas attachée juste en dessous */
+.exercice { padding: 1.3rem 0; border-top: 1px solid var(--border); }
+.exercice:first-of-type { border-top: none; padding-top: 0; }
+.exercice h3 { margin: 0 0 .8rem; color: var(--primary2); }
+
+/* CALLOUTS */
+.callout { border-radius: var(--radius); padding: .9rem 1.1rem; margin: 1.2rem 0; border-left: 4px solid; background: var(--surface2); }
+.callout.note   { border-color: var(--primary); }
+.callout.tip    { border-color: var(--success); }
+.callout.warn   { border-color: var(--warning); }
+.callout.danger { border-color: var(--danger); }
+.callout p:last-child { margin-bottom: 0; }
+.callout-title { font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .4rem; }
+.callout.note   .callout-title { color: var(--primary); }
+.callout.tip    .callout-title { color: var(--success); }
+.callout.warn   .callout-title { color: var(--warning); }
+.callout.danger .callout-title { color: var(--danger); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { background: var(--surface2); color: var(--primary2); text-align: left; padding: .6rem .9rem; font-weight: 600; border: 1px solid var(--border); }
+td { padding: .55rem .9rem; border: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: var(--surface2); }
+
+/* CODE */
+.code-block { position: relative; margin: 1rem 0; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; overflow-x: auto; }
+code { font-family: 'Consolas', 'Cascadia Code', monospace; font-size: .88rem; color: var(--primary2); }
+p code, li code, td code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: .05rem .35rem; }
+.copy-btn {
+  position: absolute; top: .5rem; right: .5rem;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+  padding: .25rem .6rem; font-size: .75rem; border-radius: 5px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--primary); color: #0d1117; }
+.copy-btn.copied { background: var(--success); color: #0d1117; }
+
+/* QUIZ */
+.quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1.2rem; }
+.quiz-question h4 { color: var(--primary2); margin-bottom: .9rem; font-size: .98rem; }
+.quiz-options { display: flex; flex-direction: column; gap: .5rem; }
+.quiz-option {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: .6rem .9rem; cursor: pointer;
+  font-size: .9rem; transition: all .2s; text-align: left; color: var(--text);
+}
+.quiz-option:hover:not(:disabled) { border-color: var(--primary); }
+.quiz-option.correct { border-color: var(--success); color: var(--success); }
+.quiz-option.wrong   { border-color: var(--danger);  color: var(--danger);  }
+.quiz-option:disabled { cursor: default; }
+.quiz-feedback { margin-top: .6rem; font-size: .87rem; color: var(--text-muted); font-style: italic; }
+.quiz-score {
+  background: var(--surface2); border: 1px solid var(--primary);
+  border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none;
+}
+.quiz-score .score-num { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+.quiz-score p { color: var(--text-muted); margin-top: .4rem; }
+.btn-restart { background: var(--primary); color: #0d1117; border: none; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 1rem; font-size: .9rem; }
+.btn-restart:hover { background: var(--primary2); }
+
+/* RESPONSIVE — sidebar devient une barre horizontale sous 900px */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: static; width: 100%; height: auto; max-height: 40vh;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .side-nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: .3rem; }
+  .side-nav button { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 6px 6px 0 0; }
+  .side-nav button.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+  .side-nav-sep { display: none; }
+  .tab-content { padding: 1.5rem 1.2rem 3rem; }
+  .topbar a.chapter-title { font-size: .82rem; }
+}
+</style>
+<link rel="stylesheet" href="assets/course-common.css">
+<script src="assets/course-common.js" defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">Ollama et IA générative pour le développement</span>
+  <a class="chapter-title" href="index.html" title="Retour à l'accueil de la formation">
+    <span class="num">📎</span><span class="txt">Annexes</span>
+  </a>
+  <div class="topbar-links">
+    
+    <a class="topbar-link" href="index.html">Sommaire</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre thème clair et sombre">
+      <span id="theme-icon">🌙</span> <span id="theme-label">Sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    
+    <nav class="side-nav" id="main-nav">
+      <button class="active" onclick="showTab('ressources-ollama-et-ia-generative-pour-le-developpement')">Ressources — Ollama et IA générative pour le développement</button>
+  <button class="" onclick="showTab('aide-memoire-ollama-et-ia-generative-pour-le-developpement')">Aide-mémoire — Ollama et IA générative pour le développement</button>
+  <button class="" onclick="showTab('glossaire-ollama-et-ia-generative-pour-le-developpement')">Glossaire — Ollama et IA générative pour le développement</button>
+    </nav>
+  </aside>
+  <div class="content">
+    <div id="tab-ressources-ollama-et-ia-generative-pour-le-developpement" class="tab-content active">
+<p>Documentation <strong>officielle</strong> uniquement, organisée par chapitre. Aucune vidéo ni source tierce non officielle : leur pérennité et leur exactitude ne peuvent pas être garanties.</p>
+<h2>Chapitre 1 — Fondamentaux et Ollama</h2>
+<ul>
+<li>📖 Ollama — site officiel et page de téléchargement : https://ollama.com/ et https://ollama.com/download</li>
+<li>📖 Ollama — dépôt officiel (documentation, FAQ, troubleshooting) : https://github.com/ollama/ollama</li>
+<li>📖 Ollama — API (endpoints natifs et compatibilité OpenAI) : https://docs.ollama.com/api</li>
+<li>📖 Bibliothèque de modèles Ollama (noms et tags exacts avant tout <code>pull</code>) : https://ollama.com/library</li>
+<li>📖 llama.cpp — moteur d'inférence GGUF sous-jacent : https://github.com/ggml-org/llama.cpp</li>
+<li>📖 vLLM — moteur de production multi-utilisateur : https://github.com/vllm-project/vllm</li>
+<li>📖 NVIDIA Container Toolkit — GPU dans Docker : https://github.com/NVIDIA/nvidia-container-toolkit</li>
+<li>📖 Docker — documentation officielle (Compose, GPU) : https://docs.docker.com</li>
+<li>📖 WSL — documentation Microsoft (installation, <code>.wslconfig</code>) : https://learn.microsoft.com/fr-fr/windows/wsl/</li>
+<li>📖 Vaswani et al., « Attention is all you need » (2017) — article fondateur du Transformer : https://arxiv.org/abs/1706.03762</li>
+</ul>
+<h2>Chapitre 2 — Assistants IA et harnais</h2>
+<ul>
+<li>📖 OpenCode — site officiel et documentation : https://opencode.ai et https://opencode.ai/docs</li>
+<li>📖 OpenCode — dépôt officiel : https://github.com/anomalyco/opencode</li>
+<li>📖 Model Context Protocol — spécification officielle : https://modelcontextprotocol.io</li>
+<li>📖 Agent Skills — norme ouverte des skills : https://agentskills.io</li>
+<li>📖 GitHub Copilot — page officielle : https://github.com/features/copilot</li>
+<li>📖 Cursor — site officiel : https://cursor.com</li>
+<li>📖 Claude Code — dépôt officiel : https://github.com/anthropics/claude-code</li>
+</ul>
+<h2>Chapitre 3 — Flux de développement et éthique</h2>
+<ul>
+<li>📖 Git — documentation officielle : https://git-scm.com/doc</li>
+<li>📖 Conventional Commits — spécification des messages de commit : https://www.conventionalcommits.org</li>
+<li>📖 pre-commit — framework de hooks : https://pre-commit.com</li>
+<li>📖 CNIL — fiches pratiques RGPD pour les professionnels : https://www.cnil.fr/fr/rgpd-pratique</li>
+<li>📖 Dawan — page officielle de la formation (référence INT102521-F) : https://www.dawan.fr</li>
+</ul>
+<h2>Suivi</h2>
+<p>Cette page est un fichier vivant : les liens officiels rencontrés au fil des sessions y sont ajoutés, un lien vérifié au moment de la rédaction seulement — aucun lien inventé.</p>
+</div>
+
+<div id="tab-aide-memoire-ollama-et-ia-generative-pour-le-developpement" class="tab-content">
+<h2>Commandes Ollama</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ollama pull llama3.1:8b</code></td>
+<td>Télécharger un modèle</td>
+</tr>
+<tr>
+<td><code>ollama run llama3.1:8b</code></td>
+<td>Charger + chat CLI (télécharge si absent)</td>
+</tr>
+<tr>
+<td><code>ollama run llama3.1:8b "prompt"</code></td>
+<td>Exécution ponctuelle</td>
+</tr>
+<tr>
+<td><code>ollama list</code></td>
+<td>Modèles sur le disque</td>
+</tr>
+<tr>
+<td><code>ollama show llama3.1:8b</code></td>
+<td>Détails : contexte, paramètres, licence</td>
+</tr>
+<tr>
+<td><code>ollama show modele --modelfile</code></td>
+<td>Retrouver la recette d'un modèle</td>
+</tr>
+<tr>
+<td><code>ollama ps</code></td>
+<td>Modèles en mémoire, % GPU/CPU, échéance keep_alive</td>
+</tr>
+<tr>
+<td><code>ollama stop llama3.1:8b</code></td>
+<td>Décharger de la mémoire</td>
+</tr>
+<tr>
+<td><code>ollama rm llama3.1:8b</code></td>
+<td>Supprimer du disque</td>
+</tr>
+<tr>
+<td><code>ollama cp llama3.1:8b dev</code></td>
+<td>Dupliquer sous un nouveau nom</td>
+</tr>
+<tr>
+<td><code>ollama create revue-code -f Modelfile</code></td>
+<td>Créer un modèle personnalisé</td>
+</tr>
+<tr>
+<td><code>ollama --version</code></td>
+<td>Vérifier l'installation</td>
+</tr>
+</tbody>
+</table></div>
+<p>CLI conversationnel : <code>/bye</code> (quitter), <code>/set verbose</code> (latences, jetons/s), <code>/show context</code> (occupation de la fenêtre), <code>"""..."""</code> (prompt multi-ligne), <code>#</code> (ajouter au prompt système).</p>
+<h2>Formules de dimensionnement (jour 1)</h2>
+<div class="code-block"><pre><code>Poids (Go)          ≈ nb_paramètres(B) × octets/param
+                      FP16 = 2 | Q8 ≈ 1 | Q5_K_M ≈ 0,69 | Q4_K_M ≈ 0,56
+Raccourci Q4        : Go ≈ B ÷ 2          (7B → ~4 Go, 70B → ~40 Go)
+Raccourci FP16      : Go ≈ B × 2          (7B → ~14 Go)
+Cache KV / séquence ≈ 2 × couches × n_kv_heads × head_dim × num_ctx × batch × octets
+                      (Llama 3 8B FP16 : 0,12–0,5 Go par 1000 jetons de contexte)
+VRAM mono           ≈ poids + KV(1 séquence) + overhead(1–2 Go)
+VRAM multi          ≈ poids + KV(1 séquence) × nb_utilisateurs + overhead
+RÈGLE D'OR          : MÉMOIRE ≥ POIDS + CACHE KV + OVERHEAD
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>RAM/VRAM dispo</th>
+<th>Gamme Q4 réaliste</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>≤ 8 Go</td>
+<td>3B–8B, contexte ≤ 8k</td>
+</tr>
+<tr>
+<td>12–16 Go</td>
+<td>8B–14B</td>
+</tr>
+<tr>
+<td>24 Go</td>
+<td>14B–32B</td>
+</tr>
+<tr>
+<td>48 Go</td>
+<td>32B–70B</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Paramètres d'exécution essentiels</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Paramètre</th>
+<th>Valeur « développement assisté »</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>temperature</code></td>
+<td>0,2 (code/factuel) — 0,7–1,0 (conversation)</td>
+</tr>
+<tr>
+<td><code>num_ctx</code></td>
+<td>16384 (vérifier la mémoire du cache KV avec <code>ollama ps</code>)</td>
+</tr>
+<tr>
+<td><code>num_predict</code></td>
+<td>4096 (borner les réponses runaway)</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>fixe pour reproductibilité (démos, tests)</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td><code>"json"</code> pour sortie parsable</td>
+</tr>
+<tr>
+<td><code>keep_alive</code></td>
+<td><code>5m</code> défaut ; <code>-1</code> serveur dédié ; <code>0</code> poste limité</td>
+</tr>
+<tr>
+<td><code>num_gpu</code></td>
+<td>auto ; baisser si VRAM insuffisante</td>
+</tr>
+<tr>
+<td><code>repeat_penalty</code></td>
+<td>1,1 défaut ; 1,15–1,3 si boucles</td>
+</tr>
+</tbody>
+</table></div>
+<p>Variables serveur : <code>OLLAMA_HOST</code>, <code>OLLAMA_MODELS</code>, <code>OLLAMA_KEEP_ALIVE</code>, <code>OLLAMA_NUM_PARALLEL</code>, <code>OLLAMA_KV_CACHE_TYPE</code> (q8_0/q4_0).</p>
+<h2>Installation express</h2>
+<div class="code-block"><pre><code class="language-bash"># Linux
+curl -fsSL https://ollama.com/install.sh | sh
+# Docker Compose (extrait) : image ollama/ollama, port 127.0.0.1:11434,
+# volume ollama:/root/.ollama, réservation GPU nvidia
+docker compose up -d
+# GPU dans Docker : pilote hôte + nvidia-container-toolkit, puis :
+docker run --rm --gpus all ubuntu nvidia-smi
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Windows 11 + WSL2 : pilote NVIDIA <strong>Windows</strong> uniquement (jamais dans Ubuntu) ; <code>%UserProfile%\.wslconfig</code> ([wsl2] memory/processors/swap) puis <code>wsl --shutdown</code>.</p>
+<h2>API HTTP</h2>
+<div class="code-block"><pre><code class="language-bash"># Génération ponctuelle
+curl http://localhost:11434/api/generate -d '{&quot;model&quot;:&quot;llama3.2&quot;,&quot;prompt&quot;:&quot;...&quot;,&quot;stream&quot;:false}'
+# Chat avec rôles + options
+curl http://localhost:11434/api/chat -d '{&quot;model&quot;:&quot;llama3.2&quot;,&quot;stream&quot;:false,
+  &quot;options&quot;:{&quot;temperature&quot;:0.2,&quot;num_ctx&quot;:8192},
+  &quot;messages&quot;:[{&quot;role&quot;:&quot;system&quot;,&quot;content&quot;:&quot;...&quot;},{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;...&quot;}]}'
+# Précharger un modèle (supprime la latence du 1er appel)
+curl http://localhost:11434/api/chat -d '{&quot;model&quot;:&quot;llama3.2&quot;}'
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Endpoints : <code>/api/chat</code>, <code>/api/generate</code>, <code>/api/tags</code>, <code>/api/show</code>, <code>/api/ps</code>, <code>/api/pull</code>, <code>/api/embed</code>, <code>/api/version</code> — compatible OpenAI : <code>http://localhost:11434/v1/chat/completions</code> (clé requise mais ignorée).</p>
+<h2>Modelfile type « développement assisté »</h2>
+<div class="code-block"><pre><code class="language-dockerfile">FROM llama3.1:8b
+PARAMETER temperature 0.2
+PARAMETER num_ctx 16384
+PARAMETER num_predict 4096
+SYSTEM Vous êtes un assistant de développement. Répondez en français,
+de façon concise et factuelle.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<h2>OpenCode : configuration minimale (jour 2)</h2>
+<div class="code-block"><pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;provider&quot;: {
+    &quot;ollama&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;name&quot;: &quot;Ollama (local)&quot;,
+      &quot;options&quot;: { &quot;baseURL&quot;: &quot;http://localhost:11434/v1&quot; },
+      &quot;models&quot;: { &quot;llama3.1:8b&quot;: { &quot;name&quot;: &quot;Llama 3.1 8B (local)&quot; } }
+    }
+  },
+  &quot;permission&quot;: {
+    &quot;edit&quot;: &quot;ask&quot;,
+    &quot;bash&quot;: { &quot;git push --force*&quot;: &quot;deny&quot;, &quot;git push *&quot;: &quot;ask&quot;, &quot;rm *&quot;: &quot;deny&quot;, &quot;*&quot;: &quot;ask&quot; }
+  },
+  &quot;mcp&quot;: {
+    &quot;github&quot;: { &quot;type&quot;: &quot;remote&quot;, &quot;url&quot;: &quot;https://api.githubcopilot.com/mcp/&quot;,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer {env:GITHUB_TOKEN}&quot; } }
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Emplacements : commandes <code>.opencode/commands/*.md</code> — skills <code>.opencode/skills/&lt;nom&gt;/SKILL.md</code> — agents via <code>opencode.json</code> (<code>mode: primary|subagent</code>). Règle permissions : la <strong>dernière</strong> règle correspondante gagne (règles larges d'abord).</p>
+<h2>Réflexes de flux (jour 3)</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Réflexe</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Demande ambiguë</td>
+<td>Questionnement approfondi avant toute spec</td>
+</tr>
+<tr>
+<td>Hallucination</td>
+<td>L'info était-elle dans le contexte ? non → ajouter ; oui → réinitialiser/compacter</td>
+</tr>
+<tr>
+<td>Agent qui boucle</td>
+<td>Réinitialiser avec plan.md + le fichier concerné</td>
+</tr>
+<tr>
+<td>Session qui dérive</td>
+<td>Zone stupide : une tâche par session, compacter aux frontières</td>
+</tr>
+<tr>
+<td>Code généré</td>
+<td>Lire le <strong>diff</strong>, jamais la description ; push seulement au vert</td>
+</tr>
+<tr>
+<td>AFK</td>
+<td>Bac à sable + spec levée + PR finale, jamais de fusion directe</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+
+<div id="tab-glossaire-ollama-et-ia-generative-pour-le-developpement" class="tab-content">
+<p>Vocabulaire des trois journées, classé par thème. Terme français d'abord, équivalent anglais entre parenthèses quand il existe.</p>
+<h2>Fondamentaux des modèles</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>IA</strong></td>
+<td>Étiquette mouvante désignant ce que les ordinateurs parviennent nouvellement à faire de façon impressionnante — aujourd'hui les grands modèles de langage.</td>
+</tr>
+<tr>
+<td><strong>Machine learning</strong> (apprentissage automatique)</td>
+<td>Règles apprises à partir de données plutôt qu'écrites à la main.</td>
+</tr>
+<tr>
+<td><strong>Deep learning</strong> (apprentissage profond)</td>
+<td>Apprentissage par réseaux de neurones à plusieurs couches.</td>
+</tr>
+<tr>
+<td><strong>Transformer</strong></td>
+<td>Architecture de réseau de neurones (2017, « Attention is all you need ») fondée sur l'attention ; base des LLM.</td>
+</tr>
+<tr>
+<td><strong>LLM</strong> (grand modèle de langage)</td>
+<td>Modèle Transformer entraîné sur un corpus massif pour générer du texte cohérent.</td>
+</tr>
+<tr>
+<td><strong>GPT</strong> (Generative Pre-trained Transformer)</td>
+<td>Famille de modèles fondée sur l'architecture Transformer.</td>
+</tr>
+<tr>
+<td><strong>Llama</strong></td>
+<td>Famille de LLM open source de Meta AI.</td>
+</tr>
+<tr>
+<td><strong>Jeton</strong> (token)</td>
+<td>Unité atomique lue et écrite par le modèle ; ≈ ¾ de mot anglais ; le code inhabituel se divise en davantage de jetons.</td>
+</tr>
+<tr>
+<td><strong>Paramètre</strong> (poids)</td>
+<td>Nombre réel appris à l'entraînement ; figé après ; tout le « savoir » du modèle y réside.</td>
+</tr>
+<tr>
+<td><strong>Entraînement</strong> (training)</td>
+<td>Processus unique et coûteux qui règle les paramètres par prédiction du jeton suivant sur un corpus massif.</td>
+</tr>
+<tr>
+<td><strong>Inférence</strong> (inference)</td>
+<td>Exécution du modèle entraîné : paramètres en lecture seule, génération de jetons. C'est ce que fait Ollama.</td>
+</tr>
+<tr>
+<td><strong>Prédiction du jeton suivant</strong></td>
+<td>Mécanisme unique du modèle : probabilités sur le vocabulaire, échantillonnage, ajout au contexte, recommencement.</td>
+</tr>
+<tr>
+<td><strong>Sans état</strong> (stateless)</td>
+<td>Le modèle ne conserve rien entre les requêtes ; la continuité vient du contexte renvoyé ou du harnais.</td>
+</tr>
+<tr>
+<td><strong>Date limite des connaissances</strong> (knowledge cutoff)</td>
+<td>Frontière temporelle de la connaissance paramétrique ; au-delà, inventions probables sans contexte fourni.</td>
+</tr>
+<tr>
+<td><strong>Connaissance paramétrique / contextuelle</strong></td>
+<td>Savoir rappelé des paramètres (figé, flou sur le rare) / savoir lu dans la fenêtre (contrôlable, coûteux en jetons).</td>
+</tr>
+<tr>
+<td><strong>Quantization</strong></td>
+<td>Réduction de la précision des poids : Q8 ≈ 1 octet/param, Q4_K_M ≈ 0,56 — divise la mémoire au prix d'une légère perte.</td>
+</tr>
+<tr>
+<td><strong>Fenêtre de contexte</strong> (context window, <code>num_ctx</code>)</td>
+<td>Nombre maximal de jetons vus à la fois : prompt système + historique + documents + réponse.</td>
+</tr>
+<tr>
+<td><strong>Cache KV</strong></td>
+<td>Mémoire des vecteurs clé/valeur par jeton traité et par couche ; croît linéairement avec <code>num_ctx</code> et le batch.</td>
+</tr>
+<tr>
+<td><strong>Overhead</strong></td>
+<td>Mémoire du moteur hors poids et cache KV (activations, buffers) : compter 1 à 2 Go.</td>
+</tr>
+<tr>
+<td><strong>Batching</strong></td>
+<td>Traitement de plusieurs séquences dans le même passage GPU — clé du multi-utilisateur (vLLM, continuous batching).</td>
+</tr>
+<tr>
+<td><strong>Multimodal</strong></td>
+<td>Modèle ingérant texte + image (voire audio) ; encodeur de vision et jetons d'image en plus.</td>
+</tr>
+<tr>
+<td><strong>Reasoning</strong></td>
+<td>Modèle entraîné à produire une chaîne de raisonnement avant la réponse ; plus de jetons, plus de latence.</td>
+</tr>
+<tr>
+<td><strong>GGUF</strong></td>
+<td>Format quantifié de llama.cpp/Ollama ; CPU et GPU, offload partiel.</td>
+</tr>
+<tr>
+<td><strong>Offload</strong></td>
+<td>Répartition des couches du modèle entre GPU et CPU quand la VRAM manque (<code>num_gpu</code>).</td>
+</tr>
+<tr>
+<td><strong>RAM unifiée</strong></td>
+<td>Pool mémoire partagé CPU/GPU (Apple Silicon) ; Ollama l'exploite via Metal.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Ollama</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>Serveur local d'exécution de LLM : registre de modèles GGUF, API REST (port 11434), CLI, moteur llama.cpp.</td>
+</tr>
+<tr>
+<td><strong>Modelfile</strong></td>
+<td>Recette déclarative d'un modèle personnalisé : <code>FROM</code>, <code>PARAMETER</code>, <code>SYSTEM</code> — <code>ollama create</code>.</td>
+</tr>
+<tr>
+<td><strong><code>keep_alive</code></strong></td>
+<td>Durée de maintien du modèle en mémoire après la dernière requête (5m par défaut, <code>-1</code> = toujours).</td>
+</tr>
+<tr>
+<td><strong>Endpoint compatible OpenAI</strong></td>
+<td><code>/v1/chat/completions</code> au format OpenAI — point de branchement des assistants IA.</td>
+</tr>
+<tr>
+<td><strong><code>stream</code></strong></td>
+<td>Envoi de la réponse jeton par jeton (<code>true</code>, UI conversationnelle) ou JSON complet d'un bloc (<code>false</code>, scripts).</td>
+</tr>
+<tr>
+<td><strong><code>temperature</code> / <code>seed</code></strong></td>
+<td>Aléa d'échantillonnage / graine de reproductibilité.</td>
+</tr>
+<tr>
+<td><strong>Function calling</strong> (<code>tools</code>)</td>
+<td>Sortie structurée (nom de fonction + arguments JSON) que l'application exécute ; nécessite un modèle entraîné pour les outils.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Harnais et agents</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Harnais</strong> (harness)</td>
+<td>Logiciel entourant le modèle : contexte, outils, autorisations, sessions — transforme le modèle en agent.</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>Modèle + harnais + outils + fenêtre de contexte, échangeant des tours avec un utilisateur.</td>
+</tr>
+<tr>
+<td><strong>Session / tour / requête</strong></td>
+<td>Hiérarchie : session (historique accumulé) &gt; tour (un message utilisateur et tout ce qui s'ensuit) &gt; requête (un aller-retour au modèle).</td>
+</tr>
+<tr>
+<td><strong>Outil</strong> (tool)</td>
+<td>Fonction exposée par le harnais au modèle : Read, Write, Bash, Search…</td>
+</tr>
+<tr>
+<td><strong>Appel d'outil / résultat d'outil</strong></td>
+<td>Texte structuré émis par le modèle, exécuté par le harnais / ce que le harnais renvoie — unique vue de l'agent sur l'environnement.</td>
+</tr>
+<tr>
+<td><strong>MCP</strong> (Model Context Protocol)</td>
+<td>Protocole d'intégration d'outils externes : un serveur écrit une fois, utilisable par tout harnais compatible.</td>
+</tr>
+<tr>
+<td><strong>Commande</strong></td>
+<td>Prompt pré-rédigé déclenché explicitement (<code>/nom</code>), avec template et <code>$ARGUMENTS</code>.</td>
+</tr>
+<tr>
+<td><strong>Skill</strong> (compétence)</td>
+<td>Savoir-faire chargé automatiquement selon la tâche ; <code>SKILL.md</code> avec description-déclencheur ; divulgation progressive.</td>
+</tr>
+<tr>
+<td><strong>Sous-agent</strong> (subagent)</td>
+<td>Agent délégué via un outil <code>task</code> : fenêtre de contexte propre, rapport unique au parent ; un seul niveau.</td>
+</tr>
+<tr>
+<td><strong>AGENTS.md</strong></td>
+<td>Feuille de route permanente du projet, chargée en début de session ; conventions, commandes, interdits.</td>
+</tr>
+<tr>
+<td><strong>Système de mémoire</strong></td>
+<td>Écriture de faits appris pendant la session + rechargement au démarrage — continuité entre sessions.</td>
+</tr>
+<tr>
+<td><strong>Divulgation progressive</strong></td>
+<td>Ne charger que le contexte utile, le reste derrière des pointeurs de contexte.</td>
+</tr>
+<tr>
+<td><strong>Prompt système</strong></td>
+<td>Instructions du fournisseur du harnais en tête de chaque requête ; prioritaire sur les messages utilisateur.</td>
+</tr>
+<tr>
+<td><strong>Permission / mode d'autorisation</strong></td>
+<td>allow / ask / deny par outil ; modes : plan (lecture seule), défaut, modification automatique, YOLO.</td>
+</tr>
+<tr>
+<td><strong>Bac à sable</strong> (sandbox)</td>
+<td>Environnement isolé (conteneur, VM) bornant le rayon d'action des exécutions.</td>
+</tr>
+<tr>
+<td><strong>Environnement</strong></td>
+<td>Le monde hors du harnais (système de fichiers…) ; seule couche qui persiste entre sessions.</td>
+</tr>
+</tbody>
+</table></div>
+<h2>Défaillances et pilotage</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hallucination</strong></td>
+<td>Sortie assurée mais erronée ; deux formes : exactitude factuelle (connaissance manquante → ajouter du contexte) et fidélité (dérive du contexte chargé → retirer du contexte).</td>
+</tr>
+<tr>
+<td><strong>Sycophantie</strong></td>
+<td>Acquiescement complaisant produit pour plaire ; test : le modèle l'aurait-il dit sans votre influence ?</td>
+</tr>
+<tr>
+<td><strong>Budget d'attention / dégradation de l'attention</strong></td>
+<td>Influence finie de chaque jeton, diluée quand le contexte grandit ; le signal se perd dans le bruit.</td>
+</tr>
+<tr>
+<td><strong>Zone intelligente / zone stupide</strong></td>
+<td>Début de session vif / session saturée où la qualité chute — sans message d'erreur.</td>
+</tr>
+<tr>
+<td><strong>Non-déterminisme</strong></td>
+<td>Même entrée, sorties possibles différentes ; réessayer est une stratégie légitime.</td>
+</tr>
+<tr>
+<td><strong>Réinitialisation / compactage / artefact de transfert</strong></td>
+<td>Repartir vide / résumer en mémoire (avec perte) / écrire un fichier de relais dans l'environnement.</td>
+</tr>
+<tr>
+<td><strong>Source primaire / secondaire</strong></td>
+<td>La chose elle-même (code, diff, transcription) / son récit (doc, résumé, description de PR) — la revue lit la source primaire.</td>
+</tr>
+<tr>
+<td><strong>Spécification / ticket</strong></td>
+<td>Artefact décrivant un travail multi-sessions / unité délimitant une session ; taille cible : une session.</td>
+</tr>
+<tr>
+<td><strong>Questionnement approfondi</strong> (grilling)</td>
+<td>L'agent interroge l'utilisateur une décision à la fois avant de figer un artefact.</td>
+</tr>
+<tr>
+<td><strong>Vérification automatisée</strong></td>
+<td>Contrôle déterministe (tests, types, lint) — alimente l'autocorrection de l'agent.</td>
+</tr>
+<tr>
+<td><strong>Revue automatisée / humaine</strong></td>
+<td>Jugement d'un agent au contexte neuf / lecture du diff par le stagiaire — jamais la description.</td>
+</tr>
+<tr>
+<td><strong>Humain dans la boucle / AFK</strong></td>
+<td>Travail supervisé en temps réel / agent lancé sans surveillance (bac à sable, PR finale).</td>
+</tr>
+<tr>
+<td><strong>Programmation au feeling</strong> (vibe coding)</td>
+<td>Accepter le code sans lire le diff ; posture de revue, acceptable sur prototype, pas sur code engageant.</td>
+</tr>
+<tr>
+<td><strong>DX / AX</strong></td>
+<td>Expérience développeur (humains) / expérience agent : préparation de l'environnement pour un travailleur sans état.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+  </div>
+</div>
+
+<script>
+// ─── THEME ──────────────────────────────────────────────────────────────────
+(function () {
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dawan-theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  updateToggleLabel();
+})();
+
+function updateToggleLabel() {
+  const current = document.documentElement.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = current === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = current === 'dark' ? 'Sombre' : 'Clair';
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('dawan-theme', next);
+  updateToggleLabel();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.side-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  document.querySelector('.content').scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ─── COPY CODE ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.previousElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copié !'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+
+let score = 0;
+let answered = {};
+
+function answer(qNum, choice) {
+  if (answered[qNum]) return;
+  answered[qNum] = true;
+  score += (choice === answers[qNum]) ? 1 : 0;
+  const qEl = document.getElementById('q' + qNum);
+  qEl.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = true;
+    const ltr = btn.textContent.trim()[0].toLowerCase();
+    if (ltr === answers[qNum]) btn.classList.add('correct');
+    else if (ltr === choice) btn.classList.add('wrong');
+  });
+  const fb = feedbacks[qNum];
+  document.getElementById('fb' + qNum).textContent = (choice === answers[qNum]) ? fb[answers[qNum]] : fb.wrong;
+  if (Object.keys(answered).length === QUIZ_TOTAL) showScore();
+}
+
+function showScore() {
+  const el = document.getElementById('quiz-score');
+  el.style.display = 'block';
+  document.getElementById('score-display').textContent = score + ' / ' + QUIZ_TOTAL;
+  const ratio = score / QUIZ_TOTAL;
+  let msg;
+  if (ratio === 1) msg = 'Parfait ! Toutes les réponses sont correctes.';
+  else if (ratio >= .8) msg = 'Très bien ! Vous maîtrisez l\'essentiel.';
+  else if (ratio >= .6) msg = 'Pas mal ! Relisez les points manqués.';
+  else if (ratio >= .4) msg = 'Quelques notions à revoir.';
+  else msg = 'Revoyez le cours avant de continuer.';
+  document.getElementById('score-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  score = 0; answered = {};
+  document.getElementById('quiz-score').style.display = 'none';
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('correct','wrong');
+  });
+  document.querySelectorAll('.quiz-feedback').forEach(fb => fb.textContent = '');
+}
+</script>
+</body>
+</html>

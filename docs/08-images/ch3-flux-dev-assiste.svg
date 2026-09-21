@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 400" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="860" height="400" fill="#ffffff"/>
+  <text x="430" y="30" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">Le flux de développement assisté, de l'intention à la fusion</text>
+
+  <defs>
+    <marker id="arrf" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Ligne du haut -->
+  <rect x="30" y="70" width="170" height="80" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="115" y="98" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0c4a6e">1. Spécification</text>
+  <text x="115" y="118" text-anchor="middle" font-size="11" fill="#0c4a6e">questionnement approfondi,</text>
+  <text x="115" y="133" text-anchor="middle" font-size="11" fill="#0c4a6e">spec + tickets (plan.md)</text>
+
+  <rect x="240" y="70" width="170" height="80" rx="10" fill="#fff7ed" stroke="#f0883e" stroke-width="2"/>
+  <text x="325" y="98" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#9a3412">2. Session TDD</text>
+  <text x="325" y="118" text-anchor="middle" font-size="11" fill="#7c2d12">tests d'abord, rouge → vert,</text>
+  <text x="325" y="133" text-anchor="middle" font-size="11" fill="#7c2d12">un ticket = une session</text>
+
+  <rect x="450" y="70" width="170" height="80" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="535" y="98" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#166534">3. Vérifications</text>
+  <text x="535" y="118" text-anchor="middle" font-size="11" fill="#14532d">tests, types, lint —</text>
+  <text x="535" y="133" text-anchor="middle" font-size="11" fill="#14532d">autocorrection de l'agent</text>
+
+  <rect x="660" y="70" width="170" height="80" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="745" y="98" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#3730a3">4. Commit + push</text>
+  <text x="745" y="118" text-anchor="middle" font-size="11" fill="#312e81">messages conventionnels,</text>
+  <text x="745" y="133" text-anchor="middle" font-size="11" fill="#312e81">push conditionné au vert</text>
+
+  <line x1="200" y1="110" x2="238" y2="110" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="410" y1="110" x2="448" y2="110" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="620" y1="110" x2="658" y2="110" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+
+  <!-- descente -->
+  <line x1="745" y1="150" x2="745" y2="228" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+
+  <!-- Ligne du bas (droite à gauche) -->
+  <rect x="660" y="230" width="170" height="80" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="745" y="258" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#854d0e">5. Pull Request</text>
+  <text x="745" y="278" text-anchor="middle" font-size="11" fill="#713f12">description outillée,</text>
+  <text x="745" y="293" text-anchor="middle" font-size="11" fill="#713f12">diff = source primaire</text>
+
+  <rect x="450" y="230" width="170" height="80" rx="10" fill="#fae8ff" stroke="#a21caf" stroke-width="2"/>
+  <text x="535" y="258" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#86198f">6. Revue automatisée</text>
+  <text x="535" y="278" text-anchor="middle" font-size="11" fill="#701a75">agent relecteur séparé,</text>
+  <text x="535" y="293" text-anchor="middle" font-size="11" fill="#701a75">contexte neuf sur le diff</text>
+
+  <rect x="240" y="230" width="170" height="80" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+  <text x="325" y="258" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#9a3412">7. Revue humaine</text>
+  <text x="325" y="278" text-anchor="middle" font-size="11" fill="#7c2d12">lire le diff, pas le récit ;</text>
+  <text x="325" y="293" text-anchor="middle" font-size="11" fill="#7c2d12">pertinence et approche</text>
+
+  <rect x="30" y="230" width="170" height="80" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+  <text x="115" y="258" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#166534">8. Fusion</text>
+  <text x="115" y="278" text-anchor="middle" font-size="11" fill="#14532d">merge après vert +</text>
+  <text x="115" y="293" text-anchor="middle" font-size="11" fill="#14532d">revues validées</text>
+
+  <line x1="660" y1="270" x2="622" y2="270" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="450" y1="270" x2="412" y2="270" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="240" y1="270" x2="202" y2="270" stroke="#475569" stroke-width="2" marker-end="url(#arrf)"/>
+
+  <!-- boucle retour -->
+  <path d="M 325 230 C 325 190 325 190 325 152" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrf)"/>
+  <text x="430" y="196" text-anchor="middle" font-size="11.5" fill="#64748b">retours de revue = nouveau tour ou nouvelle session</text>
+
+  <text x="430" y="348" text-anchor="middle" font-size="12.5" fill="#4b5563">Étapes 1 à 4 : l'agent travaille, le stagiaire pilote. Étapes 5 à 8 : garde-fous automatisés puis jugement humain.</text>
+  <text x="430" y="370" text-anchor="middle" font-size="12.5" fill="#4b5563">Rien ne fusionne sans vérifications vertes et lecture humaine du diff — l'AFK reporte la revue, il ne la supprime pas.</text>
+</svg>

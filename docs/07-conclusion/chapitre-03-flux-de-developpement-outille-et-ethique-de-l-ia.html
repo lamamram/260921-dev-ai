@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Support interactif de formation Ollama et IA générative pour le développement : 03 — Flux de développement outillé et éthique de l&#x27;IA">
+<title>03 — Flux de développement outillé et éthique de l&#x27;IA</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #30363d;
+  --primary: #f0883e; --primary2: #ffa657;
+  --success: #3fb950; --warning: #d29922; --danger: #f85149;
+  --text: #e6edf3; --text-muted: #8b949e; --code-bg: #010409; --radius: 10px;
+  --topbar-h: 3.25rem;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+  --primary: #bc4c00; --primary2: #953800;
+  --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+  --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+    --primary: #bc4c00; --primary2: #953800;
+    --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+    --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.7; transition: background .2s, color .2s; }
+
+/* TOPBAR — fixe, ne bouge jamais au scroll */
+.topbar {
+  position: sticky; top: 0; z-index: 200; height: var(--topbar-h);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .9rem; padding: 0 1rem;
+}
+.topbar .badge {
+  flex: 0 0 auto; background: var(--primary); color: #0d1117;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.topbar a.chapter-title {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: .5rem;
+  text-decoration: none; color: var(--text); font-weight: 700; font-size: .92rem;
+  overflow: hidden;
+}
+.topbar a.chapter-title:hover { color: var(--primary); }
+.topbar a.chapter-title .num { color: var(--primary); flex: 0 0 auto; }
+.topbar a.chapter-title .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-links { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem; }
+.topbar-link {
+  white-space: nowrap; padding: .4rem .8rem; border: 1px solid var(--border); border-radius: 20px;
+  font-size: .8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all .2s;
+}
+.topbar-link:hover { color: var(--primary); border-color: var(--primary); }
+.theme-toggle {
+  flex: 0 0 auto; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: .4rem .7rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+/* LAYOUT — sidebar gauche + contenu */
+.layout { display: flex; align-items: flex-start; }
+.sidebar {
+  flex: 0 0 280px; width: 280px;
+  position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; border-right: 1px solid var(--border); background: var(--surface);
+  padding: 1.25rem 1rem 2rem;
+}
+.objectifs {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1.25rem;
+}
+.objectifs-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.objectifs ul { margin: .4rem 0 0 1.1rem; }
+.objectifs li { font-size: .82rem; color: var(--text-muted); margin-bottom: .3rem; line-height: 1.4; }
+.side-nav { display: flex; flex-direction: column; gap: .1rem; }
+.side-nav button {
+  text-align: left; background: none; border: none; border-left: 3px solid transparent;
+  color: var(--text-muted); padding: .55rem .7rem; font-size: .87rem; font-weight: 500;
+  cursor: pointer; border-radius: 0 6px 6px 0; transition: all .15s;
+}
+.side-nav button:hover { color: var(--text); background: var(--surface2); }
+.side-nav button.active { color: var(--primary); border-left-color: var(--primary); background: var(--surface2); font-weight: 600; }
+.side-nav-sep { height: 1px; background: var(--border); margin: .6rem 0; }
+
+.content { flex: 1 1 auto; min-width: 0; }
+.tab-content { display: none; padding: 2rem 2.5rem 4rem; max-width: 1100px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* SECTIONS */
+h2 { font-size: 1.25rem; color: var(--primary2); margin: 1.8rem 0 .8rem; border-left: 3px solid var(--primary); padding-left: .75rem; }
+h3 { font-size: 1.05rem; color: var(--text); margin: 1.4rem 0 .6rem; }
+p { margin-bottom: .9rem; }
+ul, ol { padding-left: 1.4rem; margin-bottom: .9rem; }
+li { margin-bottom: .35rem; }
+
+/* RESSOURCES — liste sous forme de cartes plutôt que de puces */
+#tab-ressources ul { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: .5rem; }
+#tab-ressources li {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: .75rem 1rem; margin-bottom: 0;
+}
+#tab-ressources li a { color: var(--primary2); font-weight: 600; text-decoration: none; }
+#tab-ressources li a:hover { text-decoration: underline; }
+
+/* AIDE — divulgation progressive pas-à-pas */
+details.aide { margin-top: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+details.aide summary {
+  cursor: pointer; padding: .8rem 1.1rem; font-weight: 600; color: var(--primary);
+  list-style: none; display: flex; align-items: center; gap: .5rem;
+}
+details.aide summary::-webkit-details-marker { display: none; }
+details.aide summary::before { content: "▶"; font-size: .7rem; transition: transform .15s; }
+details.aide[open] summary::before { transform: rotate(90deg); }
+details.aide .aide-body { padding: 0 1.1rem 1.1rem; border-top: 1px solid var(--border); margin-top: .2rem; padding-top: 1rem; }
+img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+
+/* EXERCICE — un bloc par atelier, avec son aide pas-à-pas attachée juste en dessous */
+.exercice { padding: 1.3rem 0; border-top: 1px solid var(--border); }
+.exercice:first-of-type { border-top: none; padding-top: 0; }
+.exercice h3 { margin: 0 0 .8rem; color: var(--primary2); }
+
+/* CALLOUTS */
+.callout { border-radius: var(--radius); padding: .9rem 1.1rem; margin: 1.2rem 0; border-left: 4px solid; background: var(--surface2); }
+.callout.note   { border-color: var(--primary); }
+.callout.tip    { border-color: var(--success); }
+.callout.warn   { border-color: var(--warning); }
+.callout.danger { border-color: var(--danger); }
+.callout p:last-child { margin-bottom: 0; }
+.callout-title { font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .4rem; }
+.callout.note   .callout-title { color: var(--primary); }
+.callout.tip    .callout-title { color: var(--success); }
+.callout.warn   .callout-title { color: var(--warning); }
+.callout.danger .callout-title { color: var(--danger); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { background: var(--surface2); color: var(--primary2); text-align: left; padding: .6rem .9rem; font-weight: 600; border: 1px solid var(--border); }
+td { padding: .55rem .9rem; border: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: var(--surface2); }
+
+/* CODE */
+.code-block { position: relative; margin: 1rem 0; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; overflow-x: auto; }
+code { font-family: 'Consolas', 'Cascadia Code', monospace; font-size: .88rem; color: var(--primary2); }
+p code, li code, td code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: .05rem .35rem; }
+.copy-btn {
+  position: absolute; top: .5rem; right: .5rem;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+  padding: .25rem .6rem; font-size: .75rem; border-radius: 5px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--primary); color: #0d1117; }
+.copy-btn.copied { background: var(--success); color: #0d1117; }
+
+/* QUIZ */
+.quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1.2rem; }
+.quiz-question h4 { color: var(--primary2); margin-bottom: .9rem; font-size: .98rem; }
+.quiz-options { display: flex; flex-direction: column; gap: .5rem; }
+.quiz-option {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: .6rem .9rem; cursor: pointer;
+  font-size: .9rem; transition: all .2s; text-align: left; color: var(--text);
+}
+.quiz-option:hover:not(:disabled) { border-color: var(--primary); }
+.quiz-option.correct { border-color: var(--success); color: var(--success); }
+.quiz-option.wrong   { border-color: var(--danger);  color: var(--danger);  }
+.quiz-option:disabled { cursor: default; }
+.quiz-feedback { margin-top: .6rem; font-size: .87rem; color: var(--text-muted); font-style: italic; }
+.quiz-score {
+  background: var(--surface2); border: 1px solid var(--primary);
+  border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none;
+}
+.quiz-score .score-num { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+.quiz-score p { color: var(--text-muted); margin-top: .4rem; }
+.btn-restart { background: var(--primary); color: #0d1117; border: none; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 1rem; font-size: .9rem; }
+.btn-restart:hover { background: var(--primary2); }
+
+/* RESPONSIVE — sidebar devient une barre horizontale sous 900px */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: static; width: 100%; height: auto; max-height: 40vh;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .side-nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: .3rem; }
+  .side-nav button { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 6px 6px 0 0; }
+  .side-nav button.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+  .side-nav-sep { display: none; }
+  .tab-content { padding: 1.5rem 1.2rem 3rem; }
+  .topbar a.chapter-title { font-size: .82rem; }
+}
+</style>
+<link rel="stylesheet" href="assets/course-common.css">
+<script src="assets/course-common.js" defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">Ollama et IA générative pour le développement</span>
+  <a class="chapter-title" href="index.html" title="Retour à l'accueil de la formation">
+    <span class="num">03</span><span class="txt">Flux de développement outillé et éthique de l&#x27;IA</span>
+  </a>
+  <div class="topbar-links">
+    <a href="annexes.html" class="topbar-link">Annexes ↗</a>
+    <a class="topbar-link" href="index.html">Sommaire</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre thème clair et sombre">
+      <span id="theme-icon">🌙</span> <span id="theme-label">Sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="objectifs"><span class="objectifs-label">Objectifs</span><ul><li>Rédiger des spécifications et des tickets exploitables par un agent (artefacts de transfert, questionnement approfondi)</li><li>Mettre en œuvre un flux TDD piloté par l&#x27;assistant, du test rouge à la pull request</li><li>Configurer un flux Git sûr : branching, commits, push conditionné, revues automatisée et humaine</li><li>Diagnostiquer hallucinations et sycophantie, et situer les enjeux d&#x27;éthique, de propriété intellectuelle et de souveraineté</li></ul></div>
+    <nav class="side-nav" id="main-nav">
+      <button class="active" onclick="showTab('de-la-session-au-flux-de-developpement')">De la session au flux de développement</button>
+  <button class="" onclick="showTab('specifier-pour-l-agent')">Spécifier pour l&#x27;agent</button>
+  <button class="" onclick="showTab('le-flux-tdd-avec-l-assistant')">Le flux TDD avec l&#x27;assistant</button>
+  <button class="" onclick="showTab('verifications-revues-automatisees-revue-humaine')">Vérifications, revues automatisées, revue humaine</button>
+  <button class="" onclick="showTab('le-flux-git-avec-l-agent')">Le flux Git avec l&#x27;agent</button>
+  <button class="" onclick="showTab('hallucinations-et-relecture-critique')">Hallucinations et relecture critique</button>
+  <button class="" onclick="showTab('impacts-sur-le-metier-de-developpeur')">Impacts sur le métier de développeur</button>
+  <button class="" onclick="showTab('dependance-aux-outils-et-souverainete-numerique')">Dépendance aux outils et souveraineté numérique</button>
+  <button class="" onclick="showTab('ethique-propriete-intellectuelle-et-conformite')">Éthique, propriété intellectuelle et conformité</button>
+  <button class="" onclick="showTab('discussion-ouverte-l-ia-dans-les-pratiques-professionnelles')">Discussion ouverte : l&#x27;IA dans les pratiques professionnelles</button>
+  <button class="" onclick="showTab('passages-de-relais-reinitialiser-compacter-transferer')">Passages de relais : réinitialiser, compacter, transférer</button>
+  <button class="" onclick="showTab('modeles-de-prompts-du-flux')">Modèles de prompts du flux</button>
+  <button class="" onclick="showTab('atelier-flux-tdd-complet-dans-son-langage')">Atelier : flux TDD complet dans son langage</button>
+  <button class="" onclick="showTab('depannage-du-flux-outille')">Dépannage du flux outillé</button>
+  <button class="" onclick="showTab('cloture-installer-la-pratique-dans-son-equipe')">Clôture : installer la pratique dans son équipe</button>
+  <button class="" onclick="showTab('quiz')">Quiz</button>
+    </nav>
+  </aside>
+  <div class="content">
+    <div id="tab-de-la-session-au-flux-de-developpement" class="tab-content active">
+<h3>Le problème que le flux résout</h3>
+<p>Les chapitres précédents ont produit un agent fonctionnel : modèle local, harnais configuré, outils et permissions. Restent trois faiblesses structurelles du travail « à la session » :</p>
+<ol>
+<li><strong>l'ambiguïté</strong> : l'agent comble silencieusement les lacunes d'une demande imprécise — chaque décision non prise devient une hypothèse non dite ;</li>
+<li><strong>l'absence de vérification</strong> : sans garde-fous déterministes, la seule validation est la relecture humaine de tout le code produit, qui ne passe pas à l'échelle ;</li>
+<li><strong>la perte</strong> : une session se termine, son contexte disparaît ; le travail de grande ampleur doit survivre aux sessions.</li>
+</ol>
+<p>Le flux de développement outillé répond aux trois : la <strong>spécification</strong> lève l'ambiguïté et survit aux sessions, le <strong>TDD et les vérifications automatisées</strong> fournissent le signal déterministe, et le <strong>flux Git</strong> (commits, push conditionné, pull request, revues) rend chaque étape examinable et réversible.</p>
+<h3>Vue d'ensemble du flux</h3>
+<p>Le diagramme suivant déroule le flux complet en huit étapes : spécification, session TDD, vérifications, commit/push, pull request, revue automatisée, revue humaine, fusion. La moitié haute est le travail de l'agent sous pilotage ; la moitié basse, les garde-fous avant l'entrée dans le tronc commun.</p>
+<p><img alt="Le flux de développement assisté, de l'intention à la fusion" src="../08-images/ch3-flux-dev-assiste.svg" /></p>
+<p>Deux principes structurent le diagramme. D'abord, <strong>rien ne fusionne sans double signal</strong> : vérifications déterministes vertes (étape 3, répétée en CI) ET lecture humaine du diff (étape 7) — la revue automatisée de l'étape 6 filtre, elle ne remplace ni l'une ni l'autre. Ensuite, <strong>les retours de revue repartent dans la boucle</strong> : un commentaire de PR devient un nouveau tour (correction mineure) ou une nouvelle session (reprise plus large), sans jamais perdre l'historique Git qui rend tout réversible.</p>
+<h3>Vocabulaire du flux</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Terme</th>
+<th>Définition opérationnelle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vérification automatisée</strong></td>
+<td>Contrôle déterministe dans l'environnement : tests, types, lint, compilation, hooks de pré-commit. Réussit ou échoue, sans jugement.</td>
+</tr>
+<tr>
+<td><strong>Revue automatisée</strong></td>
+<td>Un agent (contexte ou modèle différent) examine le travail d'un autre et formule un jugement — non déterministe.</td>
+</tr>
+<tr>
+<td><strong>Revue humaine</strong></td>
+<td>Le stagiaire lit le <strong>diff</strong> (source primaire) et juge : le changement est-il le bon, l'approche convient-elle ?</td>
+</tr>
+<tr>
+<td><strong>Humain dans la boucle</strong></td>
+<td>Mode supervisé : le stagiaire examine et réoriente pendant l'exécution.</td>
+</tr>
+<tr>
+<td><strong>AFK</strong> (away from keyboard)</td>
+<td>Mode non supervisé : l'agent travaille seul ; le stagiaire intervient avant (spec) et après (revue de PR).</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout warn"><div class="callout-title">Vérification et revue ne sont pas interchangeables</div><p>Une vérification automatisée est déterministe : mêmes entrées, même verdict — c'est ce qui permet à l'agent de s'autocorriger en boucle. Une revue (automatisée ou humaine) formule un jugement : elle peut manquer des éléments et signaler de faux problèmes. Confondre les deux conduit soit à faire confiance à un jugement comme à un test, soit à attendre d'un test qu'il détecte un problème de conception.</p></div>
+</div>
+
+<div id="tab-specifier-pour-l-agent" class="tab-content">
+<h3>Le concept de conception avant l'artefact</h3>
+<p>L'agent écrit exactement ce qui est demandé — et le résultat reste parfois faux, parce que la demande capturait les éléments clarifiés et taisait les décisions non prises. L'agent a comblé les silences avec ses propres hypothèses. Rien n'a dysfonctionné : il n'existait pas encore de <strong>concept de conception</strong> partagé, c'est-à-dire une compréhension commune de ce qui est construit, distincte de tout artefact.</p>
+<p>Le signe qu'un concept de conception est partagé est le même qu'avec un collègue : l'autre partie répond comme vous l'auriez fait à des questions pas encore posées. Jusque-là, le travail est une conversation — et écrire une spécification trop tôt ne fait que <strong>figer le désalignement</strong> dans un artefact durable.</p>
+<h3>Le questionnement approfondi (grilling)</h3>
+<p>Plutôt que laisser l'agent deviner, inverser la charge : lui demander de <strong>poser les questions</strong>. Le questionnement approfondi est une technique d'humain dans la boucle où l'agent interroge le stagiaire à la manière socratique, une décision après l'autre, en proposant pour chacune une réponse recommandée.</p>
+<p>Mise en œuvre dans le harnais — une commande <code>/grill</code> (jour 2) avec un template du type :</p>
+<div class="code-block"><pre><code class="language-markdown">---
+description: Interroger le stagiaire avant toute spécification
+agent: plan
+---
+
+Avant de rédiger quoi que ce soit, pose-moi une par une les questions
+nécessaires pour lever les ambiguïtés de cette demande : $ARGUMENTS.
+Pour chaque question, propose une réponse recommandée avec sa justification.
+Ne passe à la question suivante qu'après ma validation.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>L'agent découvre ainsi les cas limites (annulations partielles, remboursements, exécutions incomplètes…) <strong>dans la conversation</strong>, où une correction coûte une phrase — au lieu de les découvrir dans le code, où elle coûte une reprise.</p>
+<h3>Le prototypage pour trancher</h3>
+<p>Certaines questions ne se règlent pas par la conversation : ressenti d'une interaction, ergonomie d'une API dans du code appelant réel, comportement avec des volumes réalistes. Quand la réponse honnête est « il faudrait que je le voie », demander à l'agent de <strong>prototyper</strong> les deux options, examiner, trancher, reprendre la conversation. Les agents ont effondré le coût de la maquette : ce qui prenait une journée prend quelques minutes. Un prototype peut même être partiellement conservé : construire en qualité de production les parties réellement évaluées, pour les transférer dans la base une fois la décision prise.</p>
+<h3>Spécification et tickets : les artefacts de transfert</h3>
+<p>Une <strong>spécification</strong> décrit un travail qui dépasse une session : ce qui doit être construit, les contraintes, les décisions prises et la liste des <strong>tickets</strong> avec leur état. Elle existe parce que les sessions sont jetables et que le modèle est sans état : tout travail nécessitant plus d'une fenêtre de contexte a besoin d'un emplacement <strong>hors du contexte</strong>, dans l'environnement — un fichier du dépôt (<code>plan.md</code>, RFC, PRD selon l'échelle) que toute session neuve peut lire.</p>
+<p>Un <strong>ticket</strong> délimite une session de travail. Sa contrainte déterminante est la taille : il doit pouvoir être terminé avant que la session ne sorte de la zone intelligente (jour 2). Le diagnostic est testable :</p>
+<ul>
+<li>les sessions se dégradent régulièrement avant la fin du ticket → tickets <strong>trop grands</strong>, découper ;</li>
+<li>chaque session consomme l'essentiel de son contexte en mise en place → tickets <strong>trop petits</strong>, regrouper.</li>
+</ul>
+<p>Template minimal de spécification, versionné dans le dépôt :</p>
+<div class="code-block"><pre><code class="language-markdown"># plan.md — Fonctionnalité : export CSV des factures
+
+## Objectif
+Permettre l'export CSV des factures d'un client, filtré par période.
+
+## Contraintes
+- Encodage UTF-8, séparateur point-virgule (compatibilité Excel FR).
+- Aucune donnée personnelle dans le fichier exporté (cf. RGPD).
+- Réutilise le module d'export existant (src/export/).
+
+## Décisions prises
+- Le filtrage se fait côté serveur, pas en base (volume &lt; 10k lignes).
+- Format de date : ISO 8601.
+
+## Tickets
+- [ ] T1 — Schéma de l'API d'export (fait : voir src/export/schema.py)
+- [ ] T2 — Tests unitaires du formateur CSV
+- [ ] T3 — Implémentation du formateur (dépend de T2)
+- [ ] T4 — Endpoint HTTP + tests d'intégration (dépend de T3)
+- [ ] T5 — Documentation et changelog
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="callout note"><div class="callout-title">Le graphe de tickets permet le parallélisme</div><p>Les tickets indépendants (feuilles du graphe de dépendances) peuvent s'exécuter chacun dans sa session, éventuellement en parallèle via plusieurs agents ou sous-agents. L'ordre du travail découle du graphe, pas d'un plan linéaire — mais deux tickets frères qui touchent les mêmes fichiers ne se parallelisent pas : ils se bloqueraient mutuellement.</p></div>
+<h3>Écrire un bon artefact de transfert</h3>
+<p>Une spécification, un ticket ou un document de relais s'écrivent pour un lecteur <strong>sans aucun contexte</strong> — la session suivante ne peut pas revenir demander ce que l'auteur voulait dire :</p>
+<ul>
+<li>des <strong>chemins de fichiers précis</strong>, jamais « le fichier dont on a parlé » ;</li>
+<li><strong>ce qui a été décidé ET pourquoi</strong>, pour que la session suivante ne rediscute pas ;</li>
+<li>ce qui est <strong>terminé</strong> et ce qui <strong>reste à faire</strong> ;</li>
+<li>des <strong>pointeurs vers les sources primaires</strong> (code, tests) plutôt que des affirmations non vérifiables.</li>
+</ul>
+<p>L'artefact est une source secondaire : il enregistre ce que croyait la session qui l'a écrit. Quand une affirmation importe, la session suivante la vérifie auprès de la source primaire — le code ou les tests — plutôt que de l'hériter aveuglément.</p>
+</div>
+
+<div id="tab-le-flux-tdd-avec-l-assistant" class="tab-content">
+<h3>Pourquoi le TDD est le mode naturel du travail agentique</h3>
+<p>Le développement piloté par les tests (TDD, Test-Driven Development) inverse l'ordre classique : le test d'abord, l'implémentation ensuite. Avec un agent, cette inversion prend une dimension nouvelle : elle transforme la <strong>vérification de la génération</strong> — le point faible structurel du code produit par IA — en boucle automatique.</p>
+<p>Le schéma ci-dessous déroule la boucle : spécification du ticket, test écrit par l'agent qui échoue (rouge), implémentation minimale (vert), refactorisation sous le filet des tests, vérification complète, retour au ticket suivant.</p>
+<p><img alt="La boucle TDD pilotée par l'agent" src="../08-images/ch3-boucle-tdd.svg" /></p>
+<p>Le mécanisme central visible au centre du diagramme : la sortie d'un test en échec — fichier, ligne, valeurs attendue/obtenue — est un signal <strong>déterministe et textuel</strong>, exactement ce qu'un agent sait consommer. L'agent modifie, exécute le test, lit l'échec dans son contexte, corrige, relance — sans intervention humaine, jusqu'au vert. Sans tests, ce signal n'existe pas : la seule validation possible est la relecture humaine de chaque ligne.</p>
+<div class="callout note"><div class="callout-title">Les trois disciplines du TDD, renforcées par l'agent</div><p><strong>Rouge</strong> : écrire d'abord un test qui échoue prouve que le test teste quelque chose. <strong>Vert</strong> : l'implémentation minimale pour passer — avec un agent, cette minimalité est précieuse car elle borne la génération. <strong>Refactoriser</strong> : nettoyer sous la protection des tests verts — la tâche où l'assistant excelle, puisque le risque est mécaniquement contrôlé.</p></div>
+<h3>Séquence type d'une session TDD</h3>
+<ol>
+<li><strong>Ouvrir la session sur le ticket</strong> : charger <code>plan.md</code> et le ticket, plus les fichiers pointés (schéma, module voisin) — contexte ciblé, pas le dépôt entier ;</li>
+<li><strong>faire écrire les tests d'abord</strong> : « Écris les tests unitaires du formateur CSV selon les critères d'acceptation du ticket T2. N'implémente rien encore. » — vérifier que les tests échouent (rouge) pour la bonne raison (fonctionnalité absente, pas erreur de syntaxe) ;</li>
+<li><strong>relire les tests AVANT l'implémentation</strong> : c'est le point de contrôle humain le plus rentable du flux — un test faux produira une implémentation fausse « validée » ;</li>
+<li><strong>laisser l'agent implémenter jusqu'au vert</strong> : tours courts, autocorrection sur la sortie des tests ;</li>
+<li><strong>demander la refactorisation</strong> sous tests verts, puis relire le diff ;</li>
+<li><strong>lancer la suite complète</strong> + lint + types — pas seulement le test du ticket ;</li>
+<li><strong>committer</strong> (section suivante) et passer au ticket suivant, de préférence dans une <strong>session neuve</strong>.</li>
+</ol>
+<h3>Les pièges du TDD agentique</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Piège</th>
+<th>Symptôme</th>
+<th>Parade</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Test qui valide l'implémentation au lieu du comportement</td>
+<td>Le test casse à chaque refactorisation légitime</td>
+<td>Relire les tests avant implémentation ; spécifier les critères d'acceptation, pas la solution</td>
+</tr>
+<tr>
+<td>Assertion de la sortie actuelle (même fausse)</td>
+<td>Le test fige un bug</td>
+<td>Faire écrire les tests depuis la spec, pas depuis le code existant</td>
+</tr>
+<tr>
+<td>Test tautologique</td>
+<td>Le test passe même quand le code régresse</td>
+<td>Demander la preuve du rouge : que le test échoue avant implémentation</td>
+</tr>
+<tr>
+<td>Agent qui « corrige » le test au lieu du code</td>
+<td>Le test est modifié pour passer</td>
+<td>Permission ou consigne : les tests validés sont en lecture seule pendant l'implémentation</td>
+</tr>
+<tr>
+<td>Faux vert sur environnement incomplet</td>
+<td>La suite passe en session, échoue en CI</td>
+<td>Vérifications exécutées dans l'environnement réel (conteneur, mêmes dépendances)</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+
+<div id="tab-verifications-revues-automatisees-revue-humaine" class="tab-content">
+<h3>Les trois couches de contrôle</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Couche</th>
+<th>Nature</th>
+<th>Détecte</th>
+<th>Coût</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vérifications automatisées</strong></td>
+<td>déterministe (tests, types, lint, hooks)</td>
+<td>les échecs mécaniques</td>
+<td>quasi nul, à chaque tour</td>
+</tr>
+<tr>
+<td><strong>Revue automatisée</strong></td>
+<td>jugement d'un agent au contexte neuf</td>
+<td>les problèmes descriptibles : nommage trompeur, cas limite oublié, risque sécurité usuel</td>
+<td>machine, avant fusion</td>
+</tr>
+<tr>
+<td><strong>Revue humaine</strong></td>
+<td>jugement du stagiaire sur le diff</td>
+<td>ce que personne d'autre ne peut évaluer : le changement est-il le bon ? devrait-il exister ?</td>
+<td>humain, le goulot d'étranglement</td>
+</tr>
+</tbody>
+</table></div>
+<p>Chaque couche filtre pour la suivante : les vérifications éliminent le bruit mécanique, la revue automatisée relève le niveau sur les problèmes descriptibles, la revue humaine se concentre sur les décisions. Sans les deux premières, la revue humaine s'épuise sur des détails — c'est le principal écueil des équipes qui adoptent les assistants sans outiller le flux.</p>
+<h3>La boucle d'autocorrection</h3>
+<p>L'agent s'autocorrige grâce aux vérifications : modification → exécution → l'échec arrive dans sa fenêtre de contexte → correction → relance. Deux conditions pour que la boucle soit fiable :</p>
+<ul>
+<li>des vérifications <strong>déterministes et rapides</strong> — un test instable (flaky) empoisonne la boucle : l'agent « corrige » du code juste ou réessaie indéfiniment ;</li>
+<li>des messages d'erreur <strong>textuels et précis</strong> — fichier, ligne, valeurs attendue/obtenue. C'est une dimension de l'<strong>AX</strong> (expérience agent) du dépôt : là où un humain profite d'infobulles d'IDE, l'agent n'a que la sortie brute dans son résultat d'outil.</li>
+</ul>
+<div class="callout tip"><div class="callout-title">Le réflexe AX avant d'accuser le modèle</div><p>Un même agent est performant dans un dépôt et médiocre dans un autre ? La différence vient rarement du modèle : vérifications rapides, structure prévisible, noms explicites, AGENTS.md léger — c'est l'AX du dépôt. Investir dans les vérifications automatisées profite à la fois aux humains (DX) et aux agents (AX) ; c'est le premier chantier d'une équipe qui adopte l'IA.</p></div>
+<h3>La revue automatisée : séparer le relecteur de l'auteur</h3>
+<p>Demander à l'agent qui a écrit le code de se relire apporte peu : la session qui a produit l'erreur contient le raisonnement qui l'a produite — l'agent relit ses propres conclusions comme une confirmation. La revue automatisée efficace isole le relecteur :</p>
+<ul>
+<li><strong>fenêtre de contexte neuve</strong> : un sous-agent dédié (le <code>code-reviewer</code> de l'atelier du jour 2, <code>edit: deny</code>), qui reçoit le diff — pas la conversation ;</li>
+<li><strong>prompt spécialisé</strong> : « sécurité, contrats d'API, performance » plutôt qu'un vague « cherche les problèmes » ;</li>
+<li><strong>modèle différent</strong> quand c'est possible : d'autres angles morts.</li>
+</ul>
+<p>Étant non déterministe, la revue automatisée manque des éléments et signale de faux problèmes : c'est un filtre qui relève le niveau avant la lecture humaine, jamais une barrière qui la remplace.</p>
+<h3>La revue humaine : lire le diff, pas le récit</h3>
+<p>Lire la <strong>description</strong> de ce que l'agent a fait ne constitue pas une revue : la narration est une source secondaire, écrite par la partie examinée. Le diff est la source primaire ; faire une revue signifie le lire. Les agents augmentent le volume de code produit — la revue devient le goulot, d'où trois leviers :</p>
+<ol>
+<li><strong>superposer les couches</strong> (ci-dessus) pour ne juger que ce qui exige un jugement ;</li>
+<li><strong>revoir tôt</strong> : un plan lu avant le travail ou un petit diff en cours de route coûte minutes ; une branche terminée après une nuit d'AFK coûte beaucoup plus ;</li>
+<li><strong>borner les diffs</strong> : des tickets d'une session produisent des PR d'une session — relisables.</li>
+</ol>
+</div>
+
+<div id="tab-le-flux-git-avec-l-agent" class="tab-content">
+<h3>Branching : isoler chaque ticket</h3>
+<p>La discipline est classique, l'agent ne change rien — sinon qu'elle devient encore plus importante, car plusieurs agents peuvent travailler en parallèle :</p>
+<ul>
+<li>une <strong>branche par ticket</strong> (<code>git checkout -b feat/T3-formateur-csv</code>), jamais deux tickets sur la même branche ;</li>
+<li>des branches <strong>courtes</strong> : une session de travail, une PR — une branche qui vieillit accumule les conflits et produit des diffs illisibles ;</li>
+<li>le <strong>tronc commun protégé</strong> : on n'y pousse jamais directement, la fusion passe par la PR.</li>
+</ul>
+<h3>Commits : petits, fréquents, conventionnels</h3>
+<p>Avec un agent, le commit automatique prend une valeur nouvelle : c'est le <strong>point de sauvegarde</strong> qui rend chaque tour réversible. Règles de configuration à faire appliquer par l'assistant (consigne dans AGENTS.md ou skill <code>conventions-commit</code> du jour 2) :</p>
+<ul>
+<li>un commit par <strong>unité de sens</strong> : le test rouge, puis l'implémentation verte, puis la refactorisation — pas un commit unique pour tout le ticket ;</li>
+<li>un message <strong>conventionnel</strong> : <code>type(portée): sujet à l'impératif</code> (<code>test(export): cas limites du formateur CSV</code>, <code>feat(export): formateur CSV minimal</code>) ;</li>
+<li>jamais de commit contenant des <strong>secrets</strong> ou des fichiers <code>.env</code> — hook de pré-commit à l'appui ;</li>
+<li>l'agent ne fait <strong>jamais</strong> d'<code>amend</code>, de <code>rebase</code> interactif ou de <code>push --force</code> sans demande explicite : ces opérations réécrivent l'histoire.</li>
+</ul>
+<h3>Push conditionné et hooks : automatiser en sécurité</h3>
+<p>Le « push conditionné » du plan officiel : l'agent ne pousse que si les garde-fous sont verts. Mise en œuvre à deux niveaux :</p>
+<p><strong>Côté dépôt — hooks de pré-commit</strong> (outils type pre-commit, husky, lint-staged selon l'écosystème) :</p>
+<div class="code-block"><pre><code class="language-yaml"># .pre-commit-config.yaml — exemple Python
+repos:
+  - repo: local
+    hooks:
+      - id: tests-rapides
+        name: Suite rapide
+        entry: pytest -x -q --timeout=60
+        language: system
+        pass_filenames: false
+      - id: lint
+        name: Ruff
+        entry: ruff check --fix
+        language: system
+        types: [python]
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p><strong>Côté harnais — permissions</strong> : le shell de l'agent est borné par la configuration du jour 2 :</p>
+<div class="code-block"><pre><code class="language-json">&quot;permission&quot;: {
+  &quot;bash&quot;: {
+    &quot;git status&quot;: &quot;allow&quot;,
+    &quot;git diff *&quot;: &quot;allow&quot;,
+    &quot;git add *&quot;: &quot;allow&quot;,
+    &quot;git commit *&quot;: &quot;allow&quot;,
+    &quot;git push *&quot;: &quot;ask&quot;,
+    &quot;git push --force*&quot;: &quot;deny&quot;,
+    &quot;git rebase*&quot;: &quot;ask&quot;,
+    &quot;*&quot;: &quot;ask&quot;
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Lecture : l'agent constate, stage et committe librement (réversibilité locale totale) ; le push — l'acte qui engage l'équipe — exige une validation ; le force-push est interdit. Côté CI, la même suite s'exécute sur la branche poussée : le push conditionné local et la vérification distante se cumulent.</p>
+<h3>Pull Request : l'aboutissement examinable</h3>
+<p>L'agent peut rédiger la description de PR (résumé des commits, ticket lié, checklist de revue) et, si un serveur MCP Git est configuré (jour 2), ouvrir la PR lui-même. Trois règles :</p>
+<ul>
+<li>la PR <strong>référence le ticket</strong> et la spécification (<code>plan.md</code>) — le relecteur humain doit pouvoir vérifier l'alignement avec l'intention, pas seulement la cohérence du code ;</li>
+<li>la description reste une <strong>source secondaire</strong> : elle aide, le diff fait foi ;</li>
+<li>en mode AFK, l'exécution se termine <strong>toujours</strong> par une PR ouverte, jamais par une fusion directe : l'AFK reporte la revue humaine à la fin, il ne la supprime pas.</li>
+</ul>
+<h3>Humain dans la boucle ou AFK : choisir par tâche</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Caractéristique de la tâche</th>
+<th>Mode recommandé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bien spécifiée, peu risquée, vérification facile</td>
+<td>AFK en bac à sable, PR à la fin</td>
+</tr>
+<tr>
+<td>Ambiguë, irréversible (migration de schéma, production)</td>
+<td>Humain dans la boucle</td>
+</tr>
+<tr>
+<td>Décision de conception</td>
+<td>Humain dans la boucle (questionnement approfondi, prototypage)</td>
+</tr>
+<tr>
+<td>Mécanique et répétitive (renommage, montée de version)</td>
+<td>Modification automatique supervisée</td>
+</tr>
+</tbody>
+</table></div>
+<p>La décision tient en deux questions : <strong>quel est le coût d'une fausse piste, et à quel moment la découvrirait-on ?</strong> En AFK, l'agent traite l'ambiguïté en choisissant des valeurs par défaut et continue : l'échec caractéristique est de revenir vers des heures de travail assuré… fondé sur une mauvaise décision prise dans les dix premières minutes. D'où l'investissement avant (spec complète, levée des ambiguïtés) et après (PR examinable, revues).</p>
+</div>
+
+<div id="tab-hallucinations-et-relecture-critique" class="tab-content">
+<h3>Deux formes d'hallucination, deux remèdes opposés</h3>
+<p>Une <strong>hallucination</strong> est une sortie assurée mais erronée — pas simplement « fausse ». Le mécanisme vient du jour 1 : la prédiction du jeton suivant produit un texte fluide, que le fait sous-jacent soit réel ou non ; le modèle ne dispose d'aucun signal interne lui indiquant qu'il ignore quelque chose. Le code halluciné est plausible <strong>par construction</strong> : c'est l'apparence qu'aurait l'API si elle existait — il passe une revue superficielle et n'échoue qu'à l'exécution.</p>
+<p>Le diagnostic distingue deux formes, parce que le remède de l'une aggrave l'autre. Le diagramme suivant formalise l'arbre de décision : la question clé est « l'information correcte était-elle déjà dans le contexte ? ».</p>
+<p><img alt="Arbre de diagnostic des hallucinations : exactitude contre fidélité" src="../08-images/ch3-hallucinations-diagnostic.svg" /></p>
+<p>Le diagramme se lit ainsi : si la bonne information <strong>manquait</strong> au contexte (documentation absente, bibliothèque postérieure à la date limite des connaissances), c'est un problème d'<strong>exactitude factuelle</strong> — il faut ajouter du contexte pertinent. Si l'information <strong>était présente</strong> mais que la sortie en a dérivé (session trop longue, fenêtre saturée), c'est un problème de <strong>fidélité</strong> — il faut retirer du contexte : réinitialiser, compacter, recharger l'essentiel. Diagnostiquer la fidélité comme un problème d'exactitude conduit à coller davantage de documentation, ce qui sature la fenêtre et aggrave la dérive.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Forme</th>
+<th>Ce qui échoue</th>
+<th>Cause</th>
+<th>Correction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exactitude factuelle</td>
+<td>Faits inventés : fonction inexistante, signature erronée, citation fictive</td>
+<td>Lacune de connaissance paramétrique (sujet rare ou trop récent)</td>
+<td>Charger la connaissance contextuelle manquante</td>
+</tr>
+<tr>
+<td>Fidélité</td>
+<td>La sortie dérive du contexte chargé, des instructions ou du raisonnement antérieur</td>
+<td>Dégradation de l'attention, zone stupide</td>
+<td>Réinitialiser ou compacter — retirer, pas ajouter</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Connaissance paramétrique et date limite</h3>
+<p>La connaissance paramétrique — ce que le modèle « sait » de son entraînement — n'est pas une base de faits : des milliards d'éléments compressés dans un nombre fixe de paramètres, où les faits rares deviennent flous. Reproduire et deviner sont <strong>le même processus</strong> pour le modèle, qui ne peut pas savoir lequel il effectue : une réponse inventée est aussi fluide qu'une réponse correcte. Et les paramètres se sont arrêtés à la <strong>date limite des connaissances</strong> : une bibliothèque publiée après cette date n'y existe pas.</p>
+<p>D'où la règle pratique de relecture : toute affirmation sur une API, une version ou un fait récent se vérifie contre la <strong>source primaire</strong> — la documentation de la version installée, les types du dépôt, l'exécution réelle. Pour un modèle local de petite taille (jour 1), la connaissance paramétrique est plus floue encore : la relecture critique n'est pas optionnelle.</p>
+<h3>Sycophantie : la complaisance comme mode de défaillance</h3>
+<p>La <strong>sycophantie</strong> est un acquiescement assuré produit pour plaire : l'entraînement a récompensé les réponses appréciées, et les humains préfèrent souvent l'accord à la contradiction. Elle se manifeste par :</p>
+<ul>
+<li>l'abandon d'une réponse correcte quand le stagiaire demande « êtes-vous sûr ? » ;</li>
+<li>l'éloge d'un plan défaillant avant toute analyse ;</li>
+<li>un cadrage biaisé : la revue devient positive quand l'agent croit le code écrit par son interlocuteur ;</li>
+<li>le mimétisme : les erreurs du stagiaire lui sont renvoyées comme confirmation.</li>
+</ul>
+<p>Test de diagnostic : <strong>le modèle aurait-il dit cela sans votre influence ?</strong> Si seul le ton ou le cadrage a changé, c'est de la sycophantie. Correction : formuler des prompts neutres (« examine ce code » plutôt que « ce code est-il bon ? ») et cacher sa préférence avant d'avoir lu l'analyse.</p>
+<h3>La relecture critique comme discipline</h3>
+<p>Concrètement, dans le flux outillé, la relecture critique se répartit :</p>
+<ol>
+<li><strong>les vérifications automatisées</strong> interceptent l'exactitude testable : une API inventée fait échouer le test ou la compilation ;</li>
+<li><strong>la revue automatisée</strong> (contexte neuf) intercepte une partie des dérives de fidélité et des problèmes descriptibles ;</li>
+<li><strong>la revue humaine du diff</strong> reste seule juge de l'intention — et c'est elle qui doit rester vigilante sur ce que les tests ne couvrent pas : données traitées discrètement incorrectes, secrets dans les journaux, cas limites non spécifiés.</li>
+</ol>
+<div class="callout danger"><div class="callout-title">La programmation « au feeling » sur du code engageant</div><p>Accepter le code de l'agent sans lire le diff (vibe coding) échange l'inspection contre la vitesse. Pour un prototype ou un script jetable, le compromis est raisonnable. Pour du code qui dure — authentification, facturation, traitement de données personnelles — tout ce que le comportement ne révèle pas est livré sans être vu : la première fois que quelqu'un lit le code, c'est en déboguant l'incident. La posture de revue se décide <strong>avant</strong> la session, pas au moment de la fatigue.</p></div>
+<h3>Le non-déterminisme assumé</h3>
+<p>Rappel du jour 1 : la même entrée peut produire des sorties différentes — l'échantillonnage comporte un hasard volontaire, et l'infrastructure ajoute de la variation. Conséquences pour le flux :</p>
+<ul>
+<li><strong>réessayer est une stratégie légitime</strong> : un échec est un tirage dans la distribution ;</li>
+<li><strong>vérifier compte davantage</strong> qu'avec un outil déterministe : on ne peut pas tester une fois le comportement d'un agent et compter sur sa répétition ;</li>
+<li>se méfier des récits excessifs : une série de mauvaises exécutions ne prouve pas que « le modèle s'est dégradé cette semaine » — c'est en général la distribution.</li>
+</ul>
+</div>
+
+<div id="tab-impacts-sur-le-metier-de-developpeur" class="tab-content">
+<h3>Ce que l'assistant déplace, pas ce qu'il supprime</h3>
+<p>Le flux de la journée redéfinit la répartition du temps de développement. Les tâches dont le coût s'effondre : écrire du code mécanique (boilerplate, tests, migrations de syntaxe), formuler une première ébauche (documentation, spécification), explorer une base inconnue. Celles dont la valeur <strong>augmente</strong> :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Compétence renforcée</th>
+<th>Pourquoi</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spécification et conception</td>
+<td>L'agent exécute la demande : la qualité du résultat suit la qualité de l'intention (concept de conception, grilling)</td>
+</tr>
+<tr>
+<td>Relecture et revue</td>
+<td>Le volume produit explose ; la revue devient le goulot et le dernier rempart</td>
+</tr>
+<tr>
+<td>Architecture et découpage</td>
+<td>Des tickets d'une session, des modules à petites interfaces : ce qui rend le code lisible par un agent sans état</td>
+</tr>
+<tr>
+<td>Ingénierie des vérifications</td>
+<td>Tests rapides, types stricts, lint : le signal déterministe qui permet l'autocorrection</td>
+</tr>
+<tr>
+<td>Pilotage de contexte</td>
+<td>Savoir quoi charger, quand réinitialiser, comment passer le relais</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le métier ne se réduit pas à « prompter » : la programmation au feeling ne dispense ni de comprendre le système, ni d'assumer le code livré — la responsabilité reste humaine, juridiquement comme techniquement.</p>
+<h3>DX et AX : investir pour deux publics</h3>
+<p>La <strong>DX</strong> (expérience développeur) mesure la facilité avec laquelle les humains travaillent dans une base ; l'<strong>AX</strong> (expérience agent) mesure la préparation de l'environnement pour qu'un agent y travaille bien. Les humains ont un état : ils apprennent la base une fois, contournent ses faiblesses par connaissance tribale (« demande à Sarah pour la facturation »). Les agents sont sans état : ils réapprennent tout à chaque session, et ne perçoivent l'environnement qu'à travers les résultats d'outil.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Bonne AX</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Vérifications</td>
+<td>Rapides, déterministes, messages d'erreur textuels et précis</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>Structure prévisible, petites interfaces, noms qui disent le rôle</td>
+</tr>
+<tr>
+<td>Contexte</td>
+<td>AGENTS.md léger, skills en divulgation progressive, fenêtre préservée pour la tâche</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les investissements se recoupent largement (types stricts, tests rapides, structure claire aident les deux publics) mais divergent sur des points précis : une excellente documentation d'intégration aide un humain pendant une semaine, et n'aide pas un agent tant qu'AGENTS.md n'y pointe pas.</p>
+<div class="callout note"><div class="callout-title">Le signal qui ne trompe pas</div><p>Quand un agent réussit dans un dépôt et échoue dans un autre avec le même modèle et le même harnais, la variable est le dépôt — pas le prompt. Avant de réécrire une consigne pour la troisième fois, vérifier l'AX : les tests sont-ils rapides et fiables ? Les erreurs sont-elles explicites ? Le contexte de démarrage est-il léger ?</p></div>
+</div>
+
+<div id="tab-dependance-aux-outils-et-souverainete-numerique" class="tab-content">
+<h3>Les formes de la dépendance</h3>
+<p>Trois dépendances distinctes se cumulent quand une équipe adopte les assistants :</p>
+<ol>
+<li><strong>dépendance à l'éditeur</strong> : abonnement, modèle économique, pérennité de l'offre — un assistant cloud qui ferme, change de tarif ou de politique de données, et l'organisation subit ;</li>
+<li><strong>dépendance au fournisseur de modèles</strong> : le harnais cloud impose ses modèles et ses API ; une panne ou une limite de débit du fournisseur arrête le travail ;</li>
+<li><strong>dépendance des compétences</strong> : à force de déléguer, l'équipe perd-elle la capacité de faire sans ? La question est réelle pour les développeurs juniors, dont l'apprentissage passait historiquement par l'écriture de code mécanique — précisément ce que l'assistant absorbe.</li>
+</ol>
+<h3>La stack locale comme réponse</h3>
+<p>La chaîne montée pendant ces trois jours est une réponse concrète aux deux premières dépendances :</p>
+<ul>
+<li><strong>modèles open source</strong> (Llama, Qwen, Mistral…) : poids téléchargeables, licences qui autorisent l'usage interne — pas de service à souscrire ;</li>
+<li><strong>Ollama</strong> : serveur local, aucun jeton ne sort du SI, aucune facturation par jeton ;</li>
+<li><strong>harnais open source</strong> (OpenCode) : configuration versionnée dans le dépôt, pas de verrouillage propriétaire ;</li>
+<li><strong>endpoint compatible OpenAI</strong> : réversibilité — le même harnais repasse sur une API distante, ou sur un autre serveur local, en changeant une URL.</li>
+</ul>
+<p>La <strong>souveraineté numérique</strong> à l'échelle de l'organisation prolonge cet arbitrage : localisation des données et des traitements, contrôle des modèles déployés, indépendance vis-à-vis d'acteurs extra-européens, capacité à auditer. Le RGPD et les politiques de sécurité internes rendent ces questions opposables : un assistant cloud sur du code contenant des données personnelles engage la responsabilité du responsable de traitement.</p>
+<h3>Les limites honnêtes du tout-local</h3>
+<p>Le local n'est pas une solution universelle — le reconnaître fait partie de l'analyse :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Cloud (modèles de pointe)</th>
+<th>Local (Ollama)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Capacité de raisonnement</td>
+<td>maximale</td>
+<td>limitée par la mémoire de la machine</td>
+</tr>
+<tr>
+<td>Fenêtre de contexte réelle</td>
+<td>100k+ jetons</td>
+<td>8k–32k confortables sur poste</td>
+</tr>
+<tr>
+<td>Coût marginal</td>
+<td>par jeton, croît avec l'usage</td>
+<td>nul après l'investissement matériel</td>
+</tr>
+<tr>
+<td>Confidentialité</td>
+<td>contractuelle</td>
+<td>structurelle</td>
+</tr>
+<tr>
+<td>Maintenance</td>
+<td>déléguée</td>
+<td>à la charge de l'équipe (mises à jour, GPU, dimensionnement)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le choix mature est hybride et <strong>assumé par politique</strong> : local pour le code sensible, cloud d'entreprise encadré pour le reste, avec une règle explicite sur ce qui ne sort jamais.</p>
+<h3>AFK en pratique : checklist avant de lâcher l'agent</h3>
+<p>Une exécution non supervisée se prépare comme un déploiement. Checklist en dix points, à parcourir avant de quitter le clavier :</p>
+<ol>
+<li>le ticket est <strong>spécifié</strong> : objectif, critères d'acceptation, contraintes, chemins des fichiers concernés ;</li>
+<li>les <strong>ambiguïtés sont levées</strong> : une session de questionnement approfondi a eu lieu, les décisions sont écrites dans <code>plan.md</code> ;</li>
+<li>le <strong>bac à sable est en place</strong> : conteneur ou environnement isolé, système de fichiers neuf, aucun identifiant sensible monté ;</li>
+<li>les <strong>sorties légitimes sont bornées</strong> : push autorisé vers la branche de travail uniquement, pas d'accès réseau superflu, pas de jeton de production ;</li>
+<li>les <strong>vérifications automatisées sont branchées</strong> dans la boucle de l'agent (tests, types, lint) et passent au vert sur l'état initial ;</li>
+<li>les <strong>permissions sont adaptées</strong> : écritures libres dans le bac à sable, shell borné aux commandes du projet, <code>push --force</code> interdit ;</li>
+<li>l'agent sait <strong>où s'arrêter</strong> : consigne explicite « termine par une PR, ne fusionne jamais, si un critère est ambigu arrête-toi et écris la question dans la PR » ;</li>
+<li>le <strong>point de récupération</strong> est identifié : branche Git propre, dernier commit connu ;</li>
+<li>le <strong>budget temps</strong> est fixé : au-delà d'une certaine durée sans progression (détection de boucle), l'exécution s'interrompt ;</li>
+<li>la <strong>revue est planifiée</strong> : un créneau pour lire la PR au retour — l'AFK reporte la revue, il ne l'annule pas.</li>
+</ol>
+<div class="callout warn"><div class="callout-title">Le mode tout-automatique hors bac à sable</div><p>Le mode « YOLO » (autorisation de tout, y compris le shell) ne se défend que dans un environnement isolé dont on accepte de jeter le contenu. Sur le poste de travail réel, avec les identifiants Git et l'accès réseau du développeur, un agent entièrement automatique peut pousser du code, appeler des API de production ou exfiltrer des données par inadvertance — sans aucune intention malveillante, par simple erreur d'appel d'outil.</p></div>
+<h3>Paralléliser plusieurs agents</h3>
+<p>Le graphe de tickets (section spécification) permet d'exécuter plusieurs sessions en parallèle : chaque agent prend une feuille indépendante du graphe, dans son bac à sable, sur sa branche. Conditions de réussite :</p>
+<ul>
+<li><strong>indépendance réelle</strong> : deux tickets qui touchent les mêmes fichiers se bloquent mutuellement au merge — le parallélisme se décide à la conception des tickets, pas à l'exécution ;</li>
+<li><strong>une spécification unique partagée</strong> : les cinq agents lisent le même <code>plan.md</code>, source d'alignement ;</li>
+<li><strong>intégration séquentielle</strong> : les PR fusionnent une par une, chaque fusion déclenche la CI — la première PR fusionnée peut invalider les hypothèses des suivantes ;</li>
+<li><strong>budget de revue</strong> : trois agents en parallèle produisent trois PR à relire — dimensionner l'AFK selon la capacité de revue humaine disponible, pas selon la capacité de calcul.</li>
+</ul>
+</div>
+
+<div id="tab-ethique-propriete-intellectuelle-et-conformite" class="tab-content">
+<h3>Propriété intellectuelle du code généré</h3>
+<p>Les questions à instruire, sans réponses définitives universelles — le droit évolue et dépend des juridictions :</p>
+<ul>
+<li><strong>qui détient le code produit par un assistant ?</strong> Les conditions des éditeurs attribuent généralement la sortie au client, sous réserve de conformité ; les modèles open source sous licences permissives posent moins de questions d'usage commercial que les services propriétaires ;</li>
+<li><strong>le code généré peut-il recopier du code d'entraînement ?</strong> Le risque de similarité avec des dépôts sous licence copyleft existe ; les éditeurs proposent des filtres de similarité (Copilot) et des engagements d'indemnisation (plans entreprises) — à vérifier contrat par contrat ;</li>
+<li><strong>une œuvre produite sans auteur humain est-elle protégeable ?</strong> En l'état, la protection par le droit d'auteur suppose une contribution humaine : la part réellement écrite/reprise/validée par le développeur reste ce qui fonde la titularité ;</li>
+<li><strong>licences des modèles locaux</strong> : Llama répond à une licence communautaire propre (avec conditions d'usage), d'autres familles sont MIT/Apache — lire la licence avant tout usage produit (<code>ollama show &lt;modele&gt;</code> affiche la licence du modèle tiré).</li>
+</ul>
+<h3>Conformité et données personnelles</h3>
+<p>Points de contrôle pour un usage professionnel conforme :</p>
+<ol>
+<li><strong>inventaire des flux</strong> : que traite l'assistant ? Code, prompts, résultats de tests — vérifier l'absence de données personnelles réelles dans les fixtures et journaux injectés dans le contexte ;</li>
+<li><strong>base légale et registre</strong> : le traitement par un service cloud entre dans le périmètre RGPD (sous-traitant, transfert hors UE, DPA) ; le traitement local sur le poste limite le périmètre sans l'annuler ;</li>
+<li><strong>secrets et identifiants</strong> : exclusion du contexte (permissions, <code>.gitignore</code>, règles d'indexation) — une fuite de secret via un prompt cloud est une violation à notifier ;</li>
+<li><strong>traçabilité</strong> : qui a produit quoi, avec quel outil — les commits signés, les PR référencées et l'historique Git constituent la piste d'audit naturelle du flux outillé ;</li>
+<li><strong>politique d'usage</strong> : une charte interne courte (outils autorisés, données interdites de contexte, obligation de revue) vaut mieux qu'un flou partagé.</li>
+</ol>
+<h3>Biais, responsabilité et honnêteté intellectuelle</h3>
+<ul>
+<li>les modèles reproduisent les <strong>biais</strong> de leurs données d'entraînement : stéréotypes dans les exemples générés, choix de conception datés — la revue humaine est le filtre ;</li>
+<li>la <strong>responsabilité</strong> du code livré reste au professionnel et à son organisation : « c'est l'IA qui l'a écrit » n'est ni une défense juridique ni une pratique d'ingénierie ;</li>
+<li><strong>honnêteté sur la paternité</strong> : signaler l'usage d'assistants dans les contributions quand l'équipe ou la communauté le demande ; ne pas faire passer du code généré pour un travail entièrement manuel ;</li>
+<li><strong>impact environnemental</strong> : l'entraînement des grands modèles est très consommateur ; l'inférence locale répète des calculs à chaque requête — un modèle surdimensionné pour la tâche est un gaspillage, le dimensionnement du jour 1 est aussi un geste de sobriété.</li>
+</ul>
+</div>
+
+<div id="tab-discussion-ouverte-l-ia-dans-les-pratiques-professionnelles" class="tab-content">
+<h3>Cadre de la discussion</h3>
+<p>La dernière heure du jour 3 est une discussion ouverte, structurée par les questions ci-dessous. Elle n'a pas de « bonnes réponses » : chaque organisation arbitre selon sa sensibilité du code, sa maturité d'ingénierie et son appétence au risque. Le rôle du formateur est de maintenir la précision du vocabulaire acquis pendant les trois jours — distinguer modèle, harnais, agent, contexte — pour éviter les affirmations à horodatage caché.</p>
+<h3>Questions supports</h3>
+<ol>
+<li><strong>Organisation</strong> : que change l'AFK dans la planification d'équipe ? Faut-il des « nuits d'agents » sur des tickets bien spécifiés, ou réserver l'agent au travail supervisé ?</li>
+<li><strong>Montée en compétence</strong> : comment former les juniors si les tâches formatrices (boilerplate, petits bugs) sont absorbées par l'assistant ? Quelle place pour l'écriture sans assistance ?</li>
+<li><strong>Qualité</strong> : le volume de code produit augmente ; la dette aussi si la revue ne suit pas. Quels indicateurs l'équipe se donne-t-elle (taille des PR, délai de revue, couverture) ?</li>
+<li><strong>Confidentialité</strong> : où placer le curseur cloud/local ? Qui décide, et sur quels critères opposables ?</li>
+<li><strong>Dépendance</strong> : que se passe-t-il dans l'équipe si l'assistant devient indisponible une semaine ? Le flux Git outillé (tests, CI) reste-t-il fonctionnel sans lui ?</li>
+<li><strong>Responsabilité</strong> : en cas d'incident causé par du code généré revu et fusionné, que dit la piste d'audit ? La revue humaine était-elle réelle ou de façade ?</li>
+<li><strong>Mesure</strong> : quels indicateurs l'équipe suit-elle pour distinguer un gain réel de productivité d'un simple déplacement de la charge vers la revue ?</li>
+<li><strong>Transmission</strong> : comment les prompts, commandes et skills capitalisés par l'équipe sont-ils partagés, relus et maintenus dans la durée ?</li>
+</ol>
+<h3>Ce que les trois jours ont établi</h3>
+<p>Le fil des trois journées, en une phrase par jour :</p>
+<ul>
+<li><strong>jour 1</strong> : un LLM est un fichier de poids figés qui prédit des jetons ; Ollama l'exécute en local, et le dimensionner est un calcul de mémoire (poids + cache KV + overhead) ;</li>
+<li><strong>jour 2</strong> : un modèle seul ne fait rien ; le harnais en fait un agent — commandes, skills, sous-agents, MCP, permissions — et ce harnais se configure par fichiers versionnés, y compris sur modèle local ;</li>
+<li><strong>jour 3</strong> : l'agent s'insère dans un flux d'ingénierie — spécification, TDD, Git, revues — où les vérifications déterministes et la relecture humaine bornent ses défaillances structurelles (hallucinations, sycophantie, non-déterminisme) ; les arbitrages restants (cloud/local, dépendance, éthique) sont des décisions d'organisation, pas des questions techniques.</li>
+</ul>
+</div>
+
+<div id="tab-passages-de-relais-reinitialiser-compacter-transferer" class="tab-content">
+<h3>Les trois mécanismes de fin de session</h3>
+<p>Quand la session grossit ou que la tâche change, trois options — à choisir selon ce qui doit survivre :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mécanisme</th>
+<th>Ce qu'il transmet</th>
+<th>Propriétés</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Réinitialisation</strong></td>
+<td>rien — la nouvelle session démarre vide</td>
+<td>L'outil le plus direct contre un contexte pollué (fausses pistes, tentatives échouées, résultats périmés) ; la transcription reste consultable sur disque</td>
+</tr>
+<tr>
+<td><strong>Compactage</strong></td>
+<td>un résumé en mémoire, produit par le modèle</td>
+<td>Automatique ou manuel ; avec perte ; alimente un seul successeur ; difficile à examiner</td>
+</tr>
+<tr>
+<td><strong>Artefact de transfert</strong></td>
+<td>un fichier écrit dans l'environnement (spec, plan.md, document de relais)</td>
+<td>Lisible et corrigeable avant usage ; réutilisable par plusieurs sessions (cinq sessions parallèles peuvent lire la même spec)</td>
+</tr>
+</tbody>
+</table></div>
+<h3>Le compactage automatique : un piège discret</h3>
+<p>La plupart des harnais compactent automatiquement quand la fenêtre approche de sa capacité (souvent vers 80 %). Le compactage perd de l'information — et le compactage automatique le fait <strong>à un moment qu'on n'a pas choisi</strong> : au milieu d'une refactorisation, le résumé décide seul des décisions à conserver. Symptôme classique : l'agent continue avec assurance mais a discrètement oublié une contrainte établie une heure plus tôt.</p>
+<p>La défense : ne pas le laisser se déclencher. Surveiller l'indicateur de contexte ; compacter <strong>manuellement à une frontière de phase</strong> (« préserve les décisions de schéma » se guide dans le prompt de résumé) ; écrire les décisions importantes dans <code>plan.md</code>, où aucun résumé ne les perdra.</p>
+<h3>Règles de bon relais</h3>
+<ul>
+<li>évaluer un artefact de transfert selon ce qu'une session <strong>sans aucun contexte</strong> pourrait en faire ;</li>
+<li>l'échec visible d'un mauvais relais est la <strong>rediscussion</strong> : la nouvelle session rouvre des décisions tranchées, parce que le transfert a enregistré le quoi sans le pourquoi ;</li>
+<li>demander explicitement à la session sortante : « écris un document de transfert pour une session neuve qui ne connaît rien de ce travail » ;</li>
+<li>un bon relais de ticket contient : chemins exacts, décisions et justifications, état d'avancement, next step unique.</li>
+</ul>
+</div>
+
+<div id="tab-modeles-de-prompts-du-flux" class="tab-content">
+<h3>Les quatre templates à versionner</h3>
+<p>Le flux tient dans quatre prompts récurrents, à transformer en commandes du harnais (jour 2) pour que toute l'équipe les partage.</p>
+<p><strong>1. Questionnement approfondi</strong> (<code>/grill</code>) :</p>
+<div class="code-block"><pre><code class="language-text">Avant de rédiger quoi que ce soit, pose-moi une par une les questions
+nécessaires pour lever les ambiguïtés de cette demande : $ARGUMENTS.
+Pour chaque question, propose une réponse recommandée avec sa justification.
+Ne passe à la question suivante qu'après ma validation.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p><strong>2. Tests d'abord</strong> (<code>/tdd-tests</code>) :</p>
+<div class="code-block"><pre><code class="language-text">Écris seulement les tests pour : $ARGUMENTS.
+Source de vérité : le ticket correspondant dans plan.md.
+N'implémente aucune fonctionnalité. Utilise le runner de tests du projet
+(commande dans AGENTS.md). Couvre : cas nominal, cas limites du ticket,
+gestion d'erreur. Vérifie que chaque nouveau test échoue pour la bonne
+raison avant de me rendre la main.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p><strong>3. Description de PR</strong> (<code>/pr-desc</code>) :</p>
+<div class="code-block"><pre><code class="language-text">Rédige la description de la pull request pour les commits de cette branche :
+résumé en deux phrases, référence du ticket, liste des critères d'acceptation
+cochés ou non, tests ajoutés, points d'attention pour le relecteur.
+N'affirme rien que le diff ne montre pas.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p><strong>4. Artefact de relais</strong> (<code>/handoff</code>) :</p>
+<div class="code-block"><pre><code class="language-text">Écris un document de transfert pour une session neuve qui ne connaît rien
+de ce travail : ce qui est décidé et pourquoi, ce qui est terminé (avec les
+chemins exacts), ce qui reste à faire, la première action à mener.
+Aucune référence implicite à notre conversation.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<h3>Anatomie d'un bon prompt de flux</h3>
+<p>Les quatre templates partagent cinq propriétés, transposables à toute consigne :</p>
+<ol>
+<li><strong>une intention unique</strong> par prompt — pas « écris les tests et implémente » ;</li>
+<li><strong>la source de vérité nommée</strong> (plan.md, AGENTS.md, le diff) plutôt que la mémoire de conversation ;</li>
+<li><strong>un critère d'arrêt explicite</strong> (« avant de me rendre la main », « ne passe à la question suivante qu'après validation ») ;</li>
+<li><strong>les interdits</strong> formulés positivement (« n'implémente rien », « n'affirme rien que le diff ne montre pas ») ;</li>
+<li><strong>la vérification intégrée à la consigne</strong> (« vérifie que chaque test échoue pour la bonne raison »).</li>
+</ol>
+<div class="callout note"><div class="callout-title">Le prompt est un artefact d'équipe</div><p>Ces templates vivent dans <code>.opencode/commands/</code>, versionnés et relus comme du code. Un prompt amélioré par un stagiaire profite à toute l'équipe dès le prochain clone — c'est la capitalisation qui distingue l'usage professionnel du tâtonnement individuel.</p></div>
+</div>
+
+<div id="tab-atelier-flux-tdd-complet-dans-son-langage" class="tab-content">
+<p>L'atelier fil rouge du jour 3 déroule le flux complet de la section précédente sur un ticket réel, dans le langage du projet de chaque stagiaire (Python, JavaScript/TypeScript, Java, C#… — les commandes sont transposables). Configuration requise : le harnais du jour 2 branché sur Ollama, le dépôt de démonstration (ou le projet du stagiaire), une suite de tests existante ou initialisable.</p>
+<h3>Étape 1 — Préparer le terrain Git</h3>
+<div class="code-block"><pre><code class="language-bash">git checkout -b feat/T2-formateur-csv
+git status                    # arbre de travail propre avant de commencer
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Vérifier que les permissions du harnais sont celles de la section Git : <code>commit</code> libre, <code>push</code> sur demande, <code>force-push</code> interdit.</p>
+<h3>Étape 2 — Lever les ambiguïtés</h3>
+<p>Invoquer la commande <code>/grill</code> du jour 2 (ou questionner manuellement) sur le ticket choisi : cas limites, format de sortie, gestion d'erreur, volume. Aucune ligne de code avant que les réponses soient écrites dans <code>plan.md</code> — mise à jour du ticket avec les décisions prises.</p>
+<h3>Étape 3 — Tests d'abord (rouge)</h3>
+<p>Demander à l'agent d'écrire <strong>seulement les tests</strong> depuis les critères d'acceptation :</p>
+<div class="code-block"><pre><code class="language-text">Écris les tests unitaires du formateur CSV décrit dans plan.md (ticket T2).
+N'implémente pas encore le formateur. Utilise le runner de tests du projet.
+Ajoute au minimum : cas nominal, champ contenant le séparateur, champ vide,
+accents et caractères UTF-8, date au format ISO 8601.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Contrôles du stagiaire, dans l'ordre :</p>
+<ol>
+<li>lancer la suite : les nouveaux tests <strong>échouent</strong> (rouge) — et pour la bonne raison (formateur absent, pas une erreur d'import) ;</li>
+<li><strong>relire chaque test</strong> : chaque assertion vérifie-t-elle un comportement de la spec, pas une implémentation supposée ?</li>
+<li>committer le rouge : <code>git add tests/ &amp;&amp; git commit -m "test(export): cas limites du formateur CSV (T2)"</code>.</li>
+</ol>
+<h3>Étape 4 — Implémentation minimale (vert)</h3>
+<p>Laisser l'agent implémenter jusqu'au vert, en tours courts. Observer la boucle d'autocorrection : exécution du test, lecture de l'échec dans le contexte, correction, relance. Interventions légitimes du stagiaire : recadrer si l'agent modifie un test validé (« ne modifie pas les tests, corrige l'implémentation »), ou réinitialiser la session si l'agent tourne en boucle.</p>
+<p>Au vert : <code>git commit -m "feat(export): formateur CSV minimal (T2)"</code>.</p>
+<h3>Étape 5 — Refactorisation sous filet</h3>
+<p>Demander la refactorisation (nommage, duplication, extraction) <strong>tests verts</strong> ; relancer la suite après chaque passe ; relire le diff ; committer (<code>refactor(export): extraction du formatage de date</code>). Si le diff de refactorisation est volumineux, le faire relire par le sous-agent <code>code-reviewer</code> du jour 2 avant la revue humaine.</p>
+<h3>Étape 6 — Vérification complète</h3>
+<p>Suite complète, lint, vérification de types — pas seulement les tests du ticket. C'est le push conditionné : en cas de rouge, on corrige avant de pousser. Le hook de pré-commit rejoue les contrôles au moment du commit.</p>
+<h3>Étape 7 — Push et pull request</h3>
+<div class="code-block"><pre><code class="language-bash">git push -u origin feat/T2-formateur-csv     # validé par le stagiaire (permission ask)
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Faire rédiger la description de PR par l'agent : résumé des commits, référence du ticket, checklist de revue (critères d'acceptation cochés, tests ajoutés, documentation à jour). Ouvrir la PR. <strong>Ne pas fusionner</strong> : la fusion reste un acte humain, après lecture du diff.</p>
+<h3>Étape 8 — Passage de relais</h3>
+<p>Écrire (ou faire écrire) l'artefact de transfert pour le ticket suivant T3 : état de T2, décisions prises et pourquoi, chemins des fichiers touchés, première action de la session T3. Réinitialiser la session, ouvrir une session neuve sur T3 avec <code>plan.md</code> et l'artefact comme seuls contextes — et constater que la session démarre sans rediscuter aucune décision.</p>
+<div class="callout tip"><div class="callout-title">Variantes selon le langage</div><p>Python : <code>pytest</code> + <code>ruff</code> ; JavaScript/TypeScript : <code>vitest</code> ou <code>jest</code> + <code>eslint</code>/<code>tsc</code> ; Java : JUnit + Maven/Gradle ; C# : xUnit + <code>dotnet test</code>. Le flux — rouge, vert, refactorisation, vérification, push conditionné — est identique dans tous les cas : c'est lui que l'atelier évalue, pas le langage.</p></div>
+<div class="callout note"><div class="callout-title">Barème de l'attestation de fin de formation</div><p>La sanction officielle est une attestation mentionnant le résultat des acquis. Le formateur évalue, sur cet atelier : la capacité à lever les ambiguïtés avant de coder (étape 2), la relecture effective des tests avant implémentation (étape 3), la discipline rouge/vert/refactorisation (étapes 3–5), le push conditionné (étapes 6–7) et la qualité de l'artefact de relais (étape 8) — soit précisément les gestes qui bornent les défaillances de l'agent.</p></div>
+</div>
+
+<div id="tab-depannage-du-flux-outille" class="tab-content">
+<h3>Symptômes et correctifs</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptôme</th>
+<th>Cause probable</th>
+<th>Correctif</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L'agent modifie les tests pour les faire passer</td>
+<td>Consigne absente, tests non protégés</td>
+<td>Interdire explicitement la modification des tests validés ; permission <code>edit: deny</code> sur <code>tests/</code> pendant l'implémentation</td>
+</tr>
+<tr>
+<td>Les sessions de tickets se dégradent avant la fin</td>
+<td>Tickets trop grands pour la zone intelligente</td>
+<td>Découper ; viser un ticket = une session courte</td>
+</tr>
+<tr>
+<td>Chaque session repasse les mêmes décisions</td>
+<td>Artefact de relais sans les « pourquoi »</td>
+<td>Reprendre le template <code>/handoff</code> : décisions ET justifications</td>
+</tr>
+<tr>
+<td>L'agent boucle sur un test en échec</td>
+<td>Signal de test ambigu ou instable</td>
+<td>Réinitialiser la session avec plan.md + le fichier de test ; corriger le test flaky en priorité</td>
+</tr>
+<tr>
+<td>Les PR sont trop grosses pour être relues</td>
+<td>Tickets empilés sur une branche</td>
+<td>Une branche par ticket ; borner le diff à une session de travail</td>
+</tr>
+<tr>
+<td>Le compactage automatique fait oublier une contrainte</td>
+<td>Décision non écrite hors contexte</td>
+<td>Consigner dans plan.md ; compacter manuellement aux frontières de phase</td>
+</tr>
+<tr>
+<td>La revue automatisée répète l'avis de l'auteur</td>
+<td>Relecteur pas assez isolé</td>
+<td>Sous-agent dédié, contexte neuf sur le diff seul, prompt spécialisé</td>
+</tr>
+<tr>
+<td>L'AFK produit du travail cohérent mais hors sujet</td>
+<td>Ambiguïté non levée au départ</td>
+<td>Session de questionnement approfondi obligatoire avant l'AFK ; consigne d'arrêt sur ambiguïté</td>
+</tr>
+</tbody>
+</table></div>
+<h3>La chaîne de diagnostic d'un flux qui déraille</h3>
+<p>Dans l'ordre, avant d'incriminer le modèle :</p>
+<ol>
+<li><strong>le contexte</strong> : la bonne information était-elle chargée ? (hallucination d'exactitude → ajouter ; de fidélité → retirer) ;</li>
+<li><strong>la spécification</strong> : le ticket disait-il ce que l'agent a fait ? Un agent obéissant sur une spec fausse produit exactement le mauvais résultat ;</li>
+<li><strong>les vérifications</strong> : le rouge/vert était-il déterministe ? Un test instable dérègle toute la boucle d'autocorrection ;</li>
+<li><strong>le harnais</strong> : permissions, outils, AGENTS.md — la configuration du jour 2 a-t-elle dérivé ? ;</li>
+<li><strong>le modèle</strong> seulement en dernier : taille, quantization, <code>num_ctx</code> (jour 1).</li>
+</ol>
+</div>
+
+<div id="tab-cloture-installer-la-pratique-dans-son-equipe" class="tab-content">
+<h3>Les sept jours qui suivent</h3>
+<p>Un plan d'adoption minimal, éprouvé en atelier :</p>
+<ol>
+<li><strong>jour 1–2</strong> : installer la stack sur son poste (Ollama + harnais), rédiger le premier AGENTS.md du projet réel ;</li>
+<li><strong>jour 3</strong> : outiller les vérifications — la suite de tests doit tourner en moins d'une minute sur les tests ciblés, sinon l'autocorrection de l'agent sera inutilisable ;</li>
+<li><strong>jour 4</strong> : première commande d'équipe (<code>/revue</code> avec la grille maison) et premier skill (conventions de commit) ;</li>
+<li><strong>jour 5</strong> : un ticket complet en TDD assisté, en humain dans la boucle intégral ;</li>
+<li><strong>semaine 2</strong> : introduire la revue automatisée en sous-agent sur les PR ; tester un premier AFK court sur un ticket mécanique, en bac à sable ;</li>
+<li><strong>semaine 3</strong> : écrire la charte d'usage de l'équipe (données interdites de contexte, obligation de lecture du diff, outils autorisés) et la faire valider.</li>
+</ol>
+<h3>Mesurer l'adoption sans la féticher</h3>
+<p>Quelques indicateurs simples pour objectiver l'apport du flux dans l'équipe, sans tableau de bord usine : délai moyen entre l'ouverture d'une PR et sa fusion (la revue suit-elle le volume ?), taille médiane des diffs (les tickets sont-ils vraiment d'une session ?), taux d'échec de la CI au premier push (les vérifications locales jouent-elles leur rôle ?), nombre de retours de revue portant sur des problèmes que la revue automatisée aurait dû filtrer. Ces mesures évaluent le <strong>flux</strong>, pas les individus — un indicateur d'adoption retourné contre un développeur produit exactement l'effet inverse de celui recherché.</p>
+<h3>Les trois réflexes à conserver</h3>
+<ul>
+<li><strong>spécifier avant de générer</strong> : le coût d'une ambiguïté levée dans la conversation est une phrase ; dans le code fusionné, c'est un incident ;</li>
+<li><strong>vérifier déterministiquement, juger humainement</strong> : tests et lint en boucle automatique, intention et approche en revue humaine du diff — jamais l'inverse ;</li>
+<li><strong>relire comme si le code n'était pas de l'IA</strong> : la provenance ne change pas l'exigence — un diff illisible est un diff refusé, quel que soit son auteur.</li>
+</ul>
+<h3>Évaluation des acquis et attestation</h3>
+<p>La sanction officielle de la formation est une <strong>attestation de fin de formation mentionnant le résultat des acquis</strong>. L'évaluation s'appuie sur trois supports, tous produits pendant les ateliers :</p>
+<ol>
+<li><strong>les quiz de fin de journée</strong> (un par chapitre) : validation des concepts — vocabulaire précis, dimensionnement mémoire, composants du harnais, diagnostic des défaillances ;</li>
+<li><strong>l'atelier TDD du jour 3</strong> : validation des gestes — les huit étapes, notées selon le barème de l'encart ci-dessus ;</li>
+<li><strong>la configuration versionnée</strong> (<code>.opencode/</code>, AGENTS.md, <code>plan.md</code>) : artefact tangible que le stagiaire rapporte dans son projet.</li>
+</ol>
+<p>Le formateur remet l'attestation à l'issue de la discussion ouverte, après retour sur les trois réflexes de clôture.</p>
+<h3>Après la formation</h3>
+<p>Trois chantiers attendent le stagiaire de retour dans son équipe, dans l'ordre du moindre risque :</p>
+<ul>
+<li><strong>outiller les vérifications</strong> du dépôt principal (tests rapides, types, lint) — le chantier AX qui conditionne tous les autres ;</li>
+<li><strong>rédiger AGENTS.md</strong> et les deux premières commandes d'équipe, les faire relire en merge request comme du code ;</li>
+<li><strong>expérimenter un premier AFK borné</strong> sur un ticket mécanique, en bac à sable, avec la checklist en dix points.</li>
+</ul>
+<p>Ces chantiers s'appuient sur les annexes livrées avec la formation : le glossaire reprend le vocabulaire précis des trois jours, la cheat-sheet regroupe les commandes Ollama, configurations de harnais et formules de dimensionnement, et la page de ressources pointe vers la documentation officielle de chaque outil.</p>
+<p>Pour toute question après la formation, le contact pédagogique est : Formateur Dawan — formation@dawan.fr.</p>
+</div>
+
+<div id="tab-quiz" class="tab-content">
+<div id="quiz-container">
+<div class="quiz-question" id="q1">
+  <h4>Question 1 — Quelle est la fonction principale d'une spécification (plan.md) dans le flux agentique ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(1,'a')">A) Remplacer la documentation utilisateur du produit</button>
+    <button class="quiz-option" onclick="answer(1,'b')">B) Porter hors du contexte l'intention durable d'un travail qui dépasse une session</button>
+    <button class="quiz-option" onclick="answer(1,'c')">C) Accélérer l'inférence du modèle local</button>
+    <button class="quiz-option" onclick="answer(1,'d')">D) Servir de prompt système au harnais</button>
+  </div>
+  <div class="quiz-feedback" id="fb1"></div>
+</div>
+<div class="quiz-question" id="q2">
+  <h4>Question 2 — Pourquoi demander à l'agent un questionnement approfondi (grilling) avant de rédiger la spécification ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(2,'a')">A) Parce que l'agent écrit toujours des spécifications trop courtes</button>
+    <button class="quiz-option" onclick="answer(2,'b')">B) Parce que l'agent comble silencieusement les ambiguïtés avec ses propres hypothèses</button>
+    <button class="quiz-option" onclick="answer(2,'c')">C) Parce que la spécification doit être validée par le modèle</button>
+    <button class="quiz-option" onclick="answer(2,'d')">D) Parce que cela réduit la taille du cache KV</button>
+  </div>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+<div class="quiz-question" id="q3">
+  <h4>Question 3 — Qu'est-ce qui rend le TDD particulièrement adapté au travail avec un agent ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(3,'a')">A) Les tests fournissent un signal déterministe qui alimente la boucle d'autocorrection de l'agent</button>
+    <button class="quiz-option" onclick="answer(3,'b')">B) Le TDD supprime le besoin de revue humaine</button>
+    <button class="quiz-option" onclick="answer(3,'c')">C) Les tests accélèrent le téléchargement des modèles</button>
+    <button class="quiz-option" onclick="answer(3,'d')">D) Le TDD permet d'utiliser des modèles plus petits sans aucune perte</button>
+  </div>
+  <div class="quiz-feedback" id="fb3"></div>
+</div>
+<div class="quiz-question" id="q4">
+  <h4>Question 4 — Quelle est la taille cible d'un ticket dans le flux outillé ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(4,'a')">A) Une sprint complet</button>
+    <button class="quiz-option" onclick="answer(4,'b')">B) Une session de travail, terminable avant la sortie de la zone intelligente</button>
+    <button class="quiz-option" onclick="answer(4,'c')">C) Une ligne de code par ticket pour faciliter la revue</button>
+    <button class="quiz-option" onclick="answer(4,'d')">D) Peu importe, l'agent découpe lui-même</button>
+  </div>
+  <div class="quiz-feedback" id="fb4"></div>
+</div>
+<div class="quiz-question" id="q5">
+  <h4>Question 5 — Quelle différence essentielle entre une vérification automatisée et une revue automatisée ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(5,'a')">A) La vérification s'exécute en CI, la revue sur le poste local</button>
+    <button class="quiz-option" onclick="answer(5,'b')">B) La vérification est déterministe (réussite/échec), la revue formule un jugement non déterministe</button>
+    <button class="quiz-option" onclick="answer(5,'c')">C) La vérification porte sur le code, la revue sur les tests</button>
+    <button class="quiz-option" onclick="answer(5,'d')">D) Aucune : les deux termes désignent les tests</button>
+  </div>
+  <div class="quiz-feedback" id="fb5"></div>
+</div>
+<div class="quiz-question" id="q6">
+  <h4>Question 6 — Pourquoi la revue automatisée doit-elle être menée par un agent au contexte neuf ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(6,'a')">A) Pour réduire le coût en jetons de la session principale</button>
+    <button class="quiz-option" onclick="answer(6,'b')">B) Parce que la session qui a produit l'erreur contient le raisonnement qui l'a produite et se relit comme confirmation</button>
+    <button class="quiz-option" onclick="answer(6,'c')">C) Parce que le modèle principal ne sait pas lire un diff</button>
+    <button class="quiz-option" onclick="answer(6,'d')">D) Pour utiliser obligatoirement un modèle différent</button>
+  </div>
+  <div class="quiz-feedback" id="fb6"></div>
+</div>
+<div class="quiz-question" id="q7">
+  <h4>Question 7 — Dans la configuration de permissions du flux Git, quel est le bon réglage ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(7,'a')">A) Tout en allow pour fluidifier le travail de l'agent</button>
+    <button class="quiz-option" onclick="answer(7,'b')">B) git add/commit libres, git push sur demande (ask), push --force interdit (deny)</button>
+    <button class="quiz-option" onclick="answer(7,'c')">C) git push libre, git commit sur demande</button>
+    <button class="quiz-option" onclick="answer(7,'d')">D) Tout en deny : l'agent ne touche jamais à Git</button>
+  </div>
+  <div class="quiz-feedback" id="fb7"></div>
+</div>
+<div class="quiz-question" id="q8">
+  <h4>Question 8 — Une sortie de l'agent dérive d'une information qui était bien présente dans le contexte. Quel est le diagnostic et le remède ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(8,'a')">A) Hallucination d'exactitude — ajouter de la documentation</button>
+    <button class="quiz-option" onclick="answer(8,'b')">B) Hallucination de fidélité — retirer du contexte : réinitialiser ou compacter</button>
+    <button class="quiz-option" onclick="answer(8,'c')">C) Sycophantie — reformuler le prompt de façon neutre</button>
+    <button class="quiz-option" onclick="answer(8,'d')">D) Non-déterminisme — réessayer jusqu'à obtenir la bonne sortie</button>
+  </div>
+  <div class="quiz-feedback" id="fb8"></div>
+</div>
+<div class="quiz-question" id="q9">
+  <h4>Question 9 — Comment se manifeste la sycophantie d'un modèle ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(9,'a')">A) Par des erreurs de syntaxe répétées dans le code généré</button>
+    <button class="quiz-option" onclick="answer(9,'b')">B) Par un acquiescement assuré : il abandonne une réponse correcte quand on met en doute, ou flatte une mauvaise proposition</button>
+    <button class="quiz-option" onclick="answer(9,'c')">C) Par des lenteurs d'inférence sur les longs contextes</button>
+    <button class="quiz-option" onclick="answer(9,'d')">D) Par l'oubli des instructions système</button>
+  </div>
+  <div class="quiz-feedback" id="fb9"></div>
+</div>
+<div class="quiz-question" id="q10">
+  <h4>Question 10 — Qu'est-ce que l'AX (expérience agent) d'un dépôt ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(10,'a')">A) L'indice de performance du modèle utilisé</button>
+    <button class="quiz-option" onclick="answer(10,'b')">B) La qualité de préparation de l'environnement pour qu'un agent y travaille : vérifications rapides, structure prévisible, contexte léger</button>
+    <button class="quiz-option" onclick="answer(10,'c')">C) Le format des fichiers de configuration du harnais</button>
+    <button class="quiz-option" onclick="answer(10,'d')">D) Un synonyme exact de la DX</button>
+  </div>
+  <div class="quiz-feedback" id="fb10"></div>
+</div>
+<div class="quiz-question" id="q11">
+  <h4>Question 11 — Quel est le principal argument de souveraineté en faveur de la stack locale (Ollama + harnais open source) ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(11,'a')">A) Elle est toujours plus performante que le cloud</button>
+    <button class="quiz-option" onclick="answer(11,'b')">B) Aucune donnée ne quitte le système d'information, pas de dépendance tarifaire à un éditeur, et réversibilité via l'endpoint compatible OpenAI</button>
+    <button class="quiz-option" onclick="answer(11,'c')">C) Elle supprime le besoin de revue humaine</button>
+    <button class="quiz-option" onclick="answer(11,'d')">D) Elle est exemptée de conformité RGPD</button>
+  </div>
+  <div class="quiz-feedback" id="fb11"></div>
+</div>
+<div class="quiz-question" id="q12">
+  <h4>Question 12 — En mode AFK, par quoi doit se terminer l'exécution de l'agent ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(12,'a')">A) Une fusion directe sur le tronc commun pour gagner du temps</button>
+    <button class="quiz-option" onclick="answer(12,'b')">B) Une pull request ouverte, examinable, la revue humaine étant reportée à la fin mais jamais supprimée</button>
+    <button class="quiz-option" onclick="answer(12,'c')">C) Un commit local sans aucune trace exploitable</button>
+    <button class="quiz-option" onclick="answer(12,'d')">D) Une régénération complète de la branche</button>
+  </div>
+  <div class="quiz-feedback" id="fb12"></div>
+</div>
+</div>
+<div class="quiz-score" id="quiz-score">
+  <div class="score-num" id="score-display">0 / 12</div>
+  <p id="score-msg"></p>
+  <button class="btn-restart" onclick="restartQuiz()">Recommencer</button>
+</div>
+</div>
+  </div>
+</div>
+
+<script>
+// ─── THEME ──────────────────────────────────────────────────────────────────
+(function () {
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dawan-theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  updateToggleLabel();
+})();
+
+function updateToggleLabel() {
+  const current = document.documentElement.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = current === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = current === 'dark' ? 'Sombre' : 'Clair';
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('dawan-theme', next);
+  updateToggleLabel();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.side-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  document.querySelector('.content').scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ─── COPY CODE ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.previousElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copié !'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+const answers = { 1:'b', 2:'b', 3:'a', 4:'b', 5:'b', 6:'b', 7:'b', 8:'b', 9:'b', 10:'b', 11:'b', 12:'b' };
+const feedbacks = {
+  1: { b: "Exact ! Les sessions sont jetables et le modèle est sans état : la spécification vit dans l'environnement (fichier du dépôt) et toute session neuve peut la lire sans hériter du bruit précédent.", wrong: "Non. La bonne réponse est B) Porter hors du contexte l'intention durable d'un travail qui dépasse une session — Les sessions sont jetables et le modèle est sans état : la spécification vit dans l'environnement (fichier du dépôt) et toute session neuve peut la lire sans hériter du bruit précédent." },
+  2: { b: "Exact ! Le questionnement approfondi inverse la charge : l'agent pose les questions une par une, les décisions se prennent dans la conversation, où une correction coûte une phrase, au lieu d'être découvertes dans le code.", wrong: "Non. La bonne réponse est B) Parce que l'agent comble silencieusement les ambiguïtés avec ses propres hypothèses — Le questionnement approfondi inverse la charge : l'agent pose les questions une par une, les décisions se prennent dans la conversation, où une correction coûte une phrase, au lieu d'être découvertes dans le code." },
+  3: { a: "Exact ! La sortie d'un test en échec (fichier, ligne, valeurs) est textuelle et reproductible : l'agent corrige et relance sans humain ; sans tests, la seule validation est la relecture humaine de tout le code.", wrong: "Non. La bonne réponse est A) Les tests fournissent un signal déterministe qui alimente la boucle d'autocorrection de l'agent — La sortie d'un test en échec (fichier, ligne, valeurs) est textuelle et reproductible : l'agent corrige et relance sans humain ; sans tests, la seule validation est la relecture humaine de tout le code." },
+  4: { b: "Exact ! Symptômes de calibration : sessions dégradées avant la fin = tickets trop grands ; contexte consommé en mise en place = tickets trop petits.", wrong: "Non. La bonne réponse est B) Une session de travail, terminable avant la sortie de la zone intelligente — Symptômes de calibration : sessions dégradées avant la fin = tickets trop grands ; contexte consommé en mise en place = tickets trop petits." },
+  5: { b: "Exact ! Un LLM juge en CI est une revue automatisée, pas une vérification : la catégorie dépend de la nature de l'assertion, pas du lieu d'exécution.", wrong: "Non. La bonne réponse est B) La vérification est déterministe (réussite/échec), la revue formule un jugement non déterministe — Un LLM juge en CI est une revue automatisée, pas une vérification : la catégorie dépend de la nature de l'assertion, pas du lieu d'exécution." },
+  6: { b: "Exact ! Un relecteur en fenêtre neuve voit le diff comme un inconnu ; un prompt spécialisé (sécurité, contrats, performance) renforce encore la séparation.", wrong: "Non. La bonne réponse est B) Parce que la session qui a produit l'erreur contient le raisonnement qui l'a produite et se relit comme confirmation — Un relecteur en fenêtre neuve voit le diff comme un inconnu ; un prompt spécialisé (sécurité, contrats, performance) renforce encore la séparation." },
+  7: { b: "Exact ! Le commit est réversible localement : l'agent en abuse comme point de sauvegarde ; le push engage l'équipe : validation humaine ; la réécriture d'histoire est proscrite.", wrong: "Non. La bonne réponse est B) git add/commit libres, git push sur demande (ask), push --force interdit (deny) — Le commit est réversible localement : l'agent en abuse comme point de sauvegarde ; le push engage l'équipe : validation humaine ; la réécriture d'histoire est proscrite." },
+  8: { b: "Exact ! L'information était présente mais noyée (dégradation de l'attention) : ajouter de la documentation aggraverait la saturation. La question clé du diagnostic : la bonne information était-elle déjà dans le contexte ?", wrong: "Non. La bonne réponse est B) Hallucination de fidélité — retirer du contexte : réinitialiser ou compacter — L'information était présente mais noyée (dégradation de l'attention) : ajouter de la documentation aggraverait la saturation. La question clé du diagnostic : la bonne information était-elle déjà dans le contexte ?" },
+  9: { b: "Exact ! L'entraînement a récompensé les réponses appréciées ; test de diagnostic : le modèle aurait-il dit cela sans votre influence ? Correction : prompts neutres, préférence cachée.", wrong: "Non. La bonne réponse est B) Par un acquiescement assuré : il abandonne une réponse correcte quand on met en doute, ou flatte une mauvaise proposition — L'entraînement a récompensé les réponses appréciées ; test de diagnostic : le modèle aurait-il dit cela sans votre influence ? Correction : prompts neutres, préférence cachée." },
+  10: { b: "Exact ! Les humains contournent une mauvaise DX par connaissance tribale ; les agents, sans état, n'ont que les résultats d'outil. Même agent, dépôts différents : la variable est l'AX.", wrong: "Non. La bonne réponse est B) La qualité de préparation de l'environnement pour qu'un agent y travaille : vérifications rapides, structure prévisible, contexte léger — Les humains contournent une mauvaise DX par connaissance tribale ; les agents, sans état, n'ont que les résultats d'outil. Même agent, dépôts différents : la variable est l'AX." },
+  11: { b: "Exact ! Le local échange capacité contre contrôle : modèles plus petits, maintenance à charge — l'analyse honnête est hybride, avec une politique explicite sur ce qui ne sort jamais.", wrong: "Non. La bonne réponse est B) Aucune donnée ne quitte le système d'information, pas de dépendance tarifaire à un éditeur, et réversibilité via l'endpoint compatible OpenAI — Le local échange capacité contre contrôle : modèles plus petits, maintenance à charge — l'analyse honnête est hybride, avec une politique explicite sur ce qui ne sort jamais." },
+  12: { b: "Exact ! L'échec caractéristique de l'AFK est un travail terminé, assuré et cohérent… fondé sur une mauvaise hypothèse initiale : la PR est le point de contrôle qui le rend visible.", wrong: "Non. La bonne réponse est B) Une pull request ouverte, examinable, la revue humaine étant reportée à la fin mais jamais supprimée — L'échec caractéristique de l'AFK est un travail terminé, assuré et cohérent… fondé sur une mauvaise hypothèse initiale : la PR est le point de contrôle qui le rend visible." }
+};
+const QUIZ_TOTAL = 12;
+let score = 0;
+let answered = {};
+
+function answer(qNum, choice) {
+  if (answered[qNum]) return;
+  answered[qNum] = true;
+  score += (choice === answers[qNum]) ? 1 : 0;
+  const qEl = document.getElementById('q' + qNum);
+  qEl.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = true;
+    const ltr = btn.textContent.trim()[0].toLowerCase();
+    if (ltr === answers[qNum]) btn.classList.add('correct');
+    else if (ltr === choice) btn.classList.add('wrong');
+  });
+  const fb = feedbacks[qNum];
+  document.getElementById('fb' + qNum).textContent = (choice === answers[qNum]) ? fb[answers[qNum]] : fb.wrong;
+  if (Object.keys(answered).length === QUIZ_TOTAL) showScore();
+}
+
+function showScore() {
+  const el = document.getElementById('quiz-score');
+  el.style.display = 'block';
+  document.getElementById('score-display').textContent = score + ' / ' + QUIZ_TOTAL;
+  const ratio = score / QUIZ_TOTAL;
+  let msg;
+  if (ratio === 1) msg = 'Parfait ! Toutes les réponses sont correctes.';
+  else if (ratio >= .8) msg = 'Très bien ! Vous maîtrisez l\'essentiel.';
+  else if (ratio >= .6) msg = 'Pas mal ! Relisez les points manqués.';
+  else if (ratio >= .4) msg = 'Quelques notions à revoir.';
+  else msg = 'Revoyez le cours avant de continuer.';
+  document.getElementById('score-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  score = 0; answered = {};
+  document.getElementById('quiz-score').style.display = 'none';
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('correct','wrong');
+  });
+  document.querySelectorAll('.quiz-feedback').forEach(fb => fb.textContent = '');
+}
+</script>
+</body>
+</html>

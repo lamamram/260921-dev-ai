@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 430" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="780" height="430" fill="#ffffff"/>
+  <text x="390" y="30" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">La boucle TDD pilotée par l'agent</text>
+
+  <defs>
+    <marker id="arrt" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- cycle central -->
+  <rect x="290" y="70" width="200" height="60" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="390" y="95" text-anchor="middle" font-size="13" font-weight="bold" fill="#0c4a6e">Spécification du ticket</text>
+  <text x="390" y="114" text-anchor="middle" font-size="11" fill="#0c4a6e">objectif + critères d'acceptation</text>
+
+  <rect x="560" y="160" width="180" height="60" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="650" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#991b1b">ROUGE</text>
+  <text x="650" y="204" text-anchor="middle" font-size="11" fill="#7f1d1d">l'agent écrit le test qui échoue</text>
+
+  <rect x="490" y="290" width="180" height="60" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="580" y="315" text-anchor="middle" font-size="13" font-weight="bold" fill="#166534">VERT</text>
+  <text x="580" y="334" text-anchor="middle" font-size="11" fill="#14532d">l'agent implémente au minimum</text>
+
+  <rect x="220" y="290" width="180" height="60" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="310" y="315" text-anchor="middle" font-size="13" font-weight="bold" fill="#3730a3">REFACTORISATION</text>
+  <text x="310" y="334" text-anchor="middle" font-size="11" fill="#312e81">tests verts comme filet</text>
+
+  <rect x="40" y="160" width="180" height="60" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="130" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">VÉRIFICATION</text>
+  <text x="130" y="204" text-anchor="middle" font-size="11" fill="#713f12">suite complète + lint + types</text>
+
+  <line x1="470" y1="115" x2="590" y2="158" stroke="#475569" stroke-width="2" marker-end="url(#arrt)"/>
+  <line x1="650" y1="220" x2="610" y2="288" stroke="#475569" stroke-width="2" marker-end="url(#arrt)"/>
+  <line x1="490" y1="320" x2="402" y2="320" stroke="#475569" stroke-width="2" marker-end="url(#arrt)"/>
+  <line x1="250" y1="290" x2="150" y2="222" stroke="#475569" stroke-width="2" marker-end="url(#arrt)"/>
+  <line x1="185" y1="160" x2="300" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#arrt)"/>
+
+  <text x="390" y="225" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#475569">Le test est écrit AVANT l'implémentation :</text>
+  <text x="390" y="243" text-anchor="middle" font-size="12.5" fill="#475569">la vérification de la génération devient</text>
+  <text x="390" y="261" text-anchor="middle" font-size="12.5" fill="#475569">automatique et déterministe</text>
+
+  <text x="390" y="392" text-anchor="middle" font-size="12.5" fill="#4b5563">Chaque passage ROUGE → VERT est un tour court ; la boucle d'autocorrection de l'agent</text>
+  <text x="390" y="412" text-anchor="middle" font-size="12.5" fill="#4b5563">s'appuie sur la sortie déterministe des tests (fichier, ligne, valeurs attendue/obtenue).</text>
+</svg>

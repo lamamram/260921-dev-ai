@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 430" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="760" height="430" fill="#ffffff"/>
+  <text x="380" y="34" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">De l'IA au LLM : des poupées russes technologiques</text>
+
+  <rect x="40" y="55" width="680" height="330" rx="24" fill="#eef2ff" stroke="#6366f1" stroke-width="2"/>
+  <text x="60" y="85" font-size="16" font-weight="bold" fill="#4338ca">Intelligence Artificielle (IA)</text>
+  <text x="60" y="107" font-size="12.5" fill="#3730a3">Tout ce que les machines parviennent à faire de façon « intelligente » — étiquette mouvante</text>
+
+  <rect x="80" y="125" width="600" height="235" rx="20" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="100" y="153" font-size="15" font-weight="bold" fill="#075985">Machine Learning (apprentissage automatique)</text>
+  <text x="100" y="173" font-size="12.5" fill="#0c4a6e">Des règles apprises à partir de données, au lieu d'être écrites à la main</text>
+
+  <rect x="120" y="190" width="520" height="150" rx="16" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="140" y="216" font-size="15" font-weight="bold" fill="#166534">Deep Learning (apprentissage profond)</text>
+  <text x="140" y="236" font-size="12.5" fill="#14532d">Réseaux de neurones à plusieurs couches — dont l'architecture Transformer (2017)</text>
+
+  <rect x="160" y="252" width="440" height="72" rx="12" fill="#ffedd5" stroke="#f0883e" stroke-width="2.5"/>
+  <text x="180" y="278" font-size="15" font-weight="bold" fill="#9a3412">LLM — grands modèles de langage</text>
+  <text x="180" y="300" font-size="12.5" fill="#7c2d12">Transformer entraîné sur un corpus massif : Llama (Meta), GPT (OpenAI), Qwen…</text>
+
+  <text x="380" y="412" text-anchor="middle" font-size="12.5" fill="#4b5563">Ollama exécute ces LLM en local ; un harnais (assistant IA) les transforme en agents utiles au développeur.</text>
+</svg>

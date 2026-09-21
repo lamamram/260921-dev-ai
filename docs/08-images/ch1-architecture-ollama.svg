@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 470" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="820" height="470" fill="#ffffff"/>
+  <text x="410" y="32" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">Architecture d'Ollama : un serveur local, plusieurs clients</text>
+
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Colonne clients -->
+  <text x="130" y="66" text-anchor="middle" font-size="14" font-weight="bold" fill="#334155">Clients</text>
+  <rect x="40" y="80" width="180" height="46" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+  <text x="130" y="108" text-anchor="middle" font-size="13" fill="#0c4a6e">CLI  (ollama run, ps…)</text>
+
+  <rect x="40" y="140" width="180" height="46" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+  <text x="130" y="161" text-anchor="middle" font-size="13" fill="#0c4a6e">Appels HTTP (curl,</text>
+  <text x="130" y="177" text-anchor="middle" font-size="13" fill="#0c4a6e">scripts, /api/chat)</text>
+
+  <rect x="40" y="200" width="180" height="46" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+  <text x="130" y="221" text-anchor="middle" font-size="13" fill="#0c4a6e">Clients OpenAI (SDK,</text>
+  <text x="130" y="237" text-anchor="middle" font-size="13" fill="#0c4a6e">/v1/chat/completions)</text>
+
+  <rect x="40" y="260" width="180" height="46" rx="8" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+  <text x="130" y="281" text-anchor="middle" font-size="13" fill="#0c4a6e">Harnais / assistants IA</text>
+  <text x="130" y="297" text-anchor="middle" font-size="13" fill="#0c4a6e">(OpenCode, IDE…)</text>
+
+  <!-- Serveur -->
+  <rect x="300" y="80" width="240" height="226" rx="12" fill="#fff7ed" stroke="#f0883e" stroke-width="2.5"/>
+  <text x="420" y="108" text-anchor="middle" font-size="15" font-weight="bold" fill="#9a3412">Serveur Ollama</text>
+  <text x="420" y="128" text-anchor="middle" font-size="12.5" fill="#7c2d12">API REST sur le port 11434</text>
+  <rect x="320" y="142" width="200" height="40" rx="7" fill="#ffffff" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="420" y="167" text-anchor="middle" font-size="12.5" fill="#7c2d12">Gestionnaire de modèles</text>
+  <rect x="320" y="192" width="200" height="40" rx="7" fill="#ffffff" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="420" y="217" text-anchor="middle" font-size="12.5" fill="#7c2d12">Ordonnanceur / keep_alive</text>
+  <rect x="320" y="242" width="200" height="46" rx="7" fill="#ffffff" stroke="#fdba74" stroke-width="1.5"/>
+  <text x="420" y="261" text-anchor="middle" font-size="12.5" fill="#7c2d12">Moteur d'inférence llama.cpp</text>
+  <text x="420" y="278" text-anchor="middle" font-size="12.5" fill="#7c2d12">(GGUF, offload CPU↔GPU)</text>
+
+  <!-- Stockage -->
+  <rect x="610" y="80" width="180" height="100" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="700" y="106" text-anchor="middle" font-size="14" font-weight="bold" fill="#166534">Modèles GGUF</text>
+  <text x="700" y="128" text-anchor="middle" font-size="12" fill="#14532d">~/.ollama/models</text>
+  <text x="700" y="148" text-anchor="middle" font-size="12" fill="#14532d">ollama pull → registre</text>
+  <text x="700" y="166" text-anchor="middle" font-size="12" fill="#14532d">ollama.com/library</text>
+
+  <!-- Matériel -->
+  <rect x="610" y="210" width="180" height="96" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="700" y="236" text-anchor="middle" font-size="14" font-weight="bold" fill="#334155">Matériel</text>
+  <text x="700" y="258" text-anchor="middle" font-size="12" fill="#475569">GPU (VRAM) ou CPU (RAM)</text>
+  <text x="700" y="276" text-anchor="middle" font-size="12" fill="#475569">RAM unifiée (Apple Silicon)</text>
+  <text x="700" y="294" text-anchor="middle" font-size="12" fill="#475569">CUDA / ROCm / Metal</text>
+
+  <!-- Flèches -->
+  <line x1="220" y1="103" x2="298" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="220" y1="163" x2="298" y2="163" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="220" y1="223" x2="298" y2="210" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="220" y1="283" x2="298" y2="260" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="540" y1="130" x2="608" y2="130" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <line x1="540" y1="255" x2="608" y2="255" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+
+  <text x="410" y="350" text-anchor="middle" font-size="12.5" fill="#4b5563">OLLAMA_HOST : adresse d'écoute (défaut 127.0.0.1:11434) — exposer sur le réseau avec prudence.</text>
+
+  <!-- Bas : cycle de vie -->
+  <rect x="40" y="372" width="740" height="72" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="1.8"/>
+  <text x="60" y="398" font-size="13.5" font-weight="bold" fill="#3730a3">Cycle de vie d'un modèle :</text>
+  <text x="60" y="424" font-size="12.5" fill="#312e81">pull (téléchargement) → run (chargement en mémoire + inférence) → keep_alive (maintien chargé) → déchargement automatique → rm (suppression du disque)</text>
+</svg>

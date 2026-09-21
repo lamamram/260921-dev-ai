@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 470" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="840" height="470" fill="#ffffff"/>
+  <text x="420" y="32" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">Les composants d'un harnais de développement</text>
+
+  <!-- Centre : modèle -->
+  <circle cx="420" cy="240" r="72" fill="#eef2ff" stroke="#6366f1" stroke-width="2.5"/>
+  <text x="420" y="232" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#3730a3">Modèle</text>
+  <text x="420" y="252" text-anchor="middle" font-size="11.5" fill="#312e81">(Ollama local</text>
+  <text x="420" y="268" text-anchor="middle" font-size="11.5" fill="#312e81">ou API distante)</text>
+
+  <!-- Composants autour -->
+  <g font-size="12">
+    <rect x="60" y="70" width="200" height="66" rx="10" fill="#fff7ed" stroke="#f0883e" stroke-width="1.8"/>
+    <text x="160" y="94" text-anchor="middle" font-size="13" font-weight="bold" fill="#9a3412">Prompt système</text>
+    <text x="160" y="112" text-anchor="middle" fill="#7c2d12">identité, règles de comportement,</text>
+    <text x="160" y="127" text-anchor="middle" fill="#7c2d12">descriptions des outils</text>
+
+    <rect x="320" y="56" width="200" height="66" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.8"/>
+    <text x="420" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#166534">Mémoire projet</text>
+    <text x="420" y="98" text-anchor="middle" fill="#14532d">AGENTS.md, fichiers de mémoire :</text>
+    <text x="420" y="113" text-anchor="middle" fill="#14532d">conventions persistantes</text>
+
+    <rect x="580" y="70" width="200" height="66" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+    <text x="680" y="94" text-anchor="middle" font-size="13" font-weight="bold" fill="#0c4a6e">Commandes</text>
+    <text x="680" y="112" text-anchor="middle" fill="#0c4a6e">tâches répétitives capitalisées,</text>
+    <text x="680" y="127" text-anchor="middle" fill="#0c4a6e">déclenchées par /nom</text>
+
+    <rect x="40" y="205" width="185" height="66" rx="10" fill="#fae8ff" stroke="#a21caf" stroke-width="1.8"/>
+    <text x="132" y="229" text-anchor="middle" font-size="13" font-weight="bold" fill="#86198f">Outils intégrés</text>
+    <text x="132" y="247" text-anchor="middle" fill="#701a75">Read, Write, Bash,</text>
+    <text x="132" y="262" text-anchor="middle" fill="#701a75">Search…</text>
+
+    <rect x="615" y="205" width="185" height="66" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+    <text x="707" y="229" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">Serveurs MCP</text>
+    <text x="707" y="247" text-anchor="middle" fill="#713f12">outils externes : tickets,</text>
+    <text x="707" y="262" text-anchor="middle" fill="#713f12">Git, navigateur, SGBD…</text>
+
+    <rect x="60" y="340" width="200" height="66" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+    <text x="160" y="364" text-anchor="middle" font-size="13" font-weight="bold" fill="#9a3412">Skills</text>
+    <text x="160" y="382" text-anchor="middle" fill="#7c2d12">savoir-faire chargés à la</text>
+    <text x="160" y="397" text-anchor="middle" fill="#7c2d12">demande (SKILL.md)</text>
+
+    <rect x="320" y="354" width="200" height="66" rx="10" fill="#e2e8f0" stroke="#475569" stroke-width="1.8"/>
+    <text x="420" y="378" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">Permissions</text>
+    <text x="420" y="396" text-anchor="middle" fill="#334155">allow / ask / deny par outil,</text>
+    <text x="420" y="411" text-anchor="middle" fill="#334155">modes plan, défaut, YOLO</text>
+
+    <rect x="580" y="340" width="200" height="66" rx="10" fill="#cffafe" stroke="#0891b2" stroke-width="1.8"/>
+    <text x="680" y="364" text-anchor="middle" font-size="13" font-weight="bold" fill="#155e75">Agents &amp; sous-agents</text>
+    <text x="680" y="382" text-anchor="middle" fill="#164e63">rôles spécialisés, contextes</text>
+    <text x="680" y="397" text-anchor="middle" fill="#164e63">séparés (build, plan, revue)</text>
+
+    <rect x="320" y="160" width="200" height="42" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.8"/>
+    <text x="420" y="186" text-anchor="middle" font-size="13" font-weight="bold" fill="#334155">Bac à sable (sandbox)</text>
+  </g>
+
+  <!-- traits de liaison -->
+  <g stroke="#94a3b8" stroke-width="1.6">
+    <line x1="230" y1="120" x2="368" y2="196"/>
+    <line x1="420" y1="122" x2="420" y2="160"/>
+    <line x1="610" y1="120" x2="478" y2="192"/>
+    <line x1="225" y1="238" x2="348" y2="238"/>
+    <line x1="615" y1="238" x2="492" y2="238"/>
+    <line x1="230" y1="356" x2="366" y2="290"/>
+    <line x1="420" y1="354" x2="420" y2="312"/>
+    <line x1="610" y1="356" x2="474" y2="292"/>
+  </g>
+
+  <text x="420" y="452" text-anchor="middle" font-size="12.5" fill="#4b5563">Même modèle, harnais différents = comportements différents. L'essentiel de la configuration vise le harnais, pas le modèle.</text>
+</svg>

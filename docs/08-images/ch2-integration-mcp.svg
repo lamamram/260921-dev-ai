@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 430" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <rect width="820" height="430" fill="#ffffff"/>
+  <text x="410" y="32" text-anchor="middle" font-size="19" font-weight="bold" fill="#1f2937">MCP : écrire l'intégration une fois, l'utiliser partout</text>
+
+  <defs>
+    <marker id="arr3" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Harnais -->
+  <rect x="60" y="140" width="200" height="150" rx="12" fill="#fff7ed" stroke="#f0883e" stroke-width="2.5"/>
+  <text x="160" y="170" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#9a3412">Harnais / assistant</text>
+  <text x="160" y="192" text-anchor="middle" font-size="12" fill="#7c2d12">(OpenCode, Cursor,</text>
+  <text x="160" y="208" text-anchor="middle" font-size="12" fill="#7c2d12">Claude Code…)</text>
+  <text x="160" y="238" text-anchor="middle" font-size="12" fill="#7c2d12">client MCP :</text>
+  <text x="160" y="256" text-anchor="middle" font-size="12" fill="#7c2d12">découvre les outils</text>
+  <text x="160" y="274" text-anchor="middle" font-size="12" fill="#7c2d12">annoncés par les serveurs</text>
+
+  <!-- Serveurs MCP -->
+  <rect x="380" y="70" width="180" height="56" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+  <text x="470" y="93" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">Serveur MCP GitHub</text>
+  <text x="470" y="112" text-anchor="middle" font-size="11.5" fill="#713f12">PR, issues, revues</text>
+
+  <rect x="380" y="142" width="180" height="56" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+  <text x="470" y="165" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">Serveur MCP Playwright</text>
+  <text x="470" y="184" text-anchor="middle" font-size="11.5" fill="#713f12">navigation, tests web</text>
+
+  <rect x="380" y="214" width="180" height="56" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+  <text x="470" y="237" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">Serveur MCP base de données</text>
+  <text x="470" y="256" text-anchor="middle" font-size="11.5" fill="#713f12">schéma, requêtes lecture</text>
+
+  <rect x="380" y="286" width="180" height="56" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+  <text x="470" y="309" text-anchor="middle" font-size="13" font-weight="bold" fill="#854d0e">Serveur MCP Context7</text>
+  <text x="470" y="328" text-anchor="middle" font-size="11.5" fill="#713f12">documentation à jour</text>
+
+  <!-- Systèmes cibles -->
+  <rect x="650" y="105" width="140" height="180" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+  <text x="720" y="135" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0c4a6e">Systèmes</text>
+  <text x="720" y="153" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#0c4a6e">réels</text>
+  <text x="720" y="183" text-anchor="middle" font-size="11.5" fill="#0c4a6e">API GitHub</text>
+  <text x="720" y="203" text-anchor="middle" font-size="11.5" fill="#0c4a6e">navigateur</text>
+  <text x="720" y="223" text-anchor="middle" font-size="11.5" fill="#0c4a6e">PostgreSQL…</text>
+  <text x="720" y="253" text-anchor="middle" font-size="11.5" fill="#0c4a6e">chaque serveur traduit</text>
+  <text x="720" y="269" text-anchor="middle" font-size="11.5" fill="#0c4a6e">le protocole en appels</text>
+
+  <!-- Flèches -->
+  <line x1="260" y1="185" x2="378" y2="98" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="260" y1="200" x2="378" y2="170" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="260" y1="230" x2="378" y2="242" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="260" y1="260" x2="378" y2="314" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="560" y1="150" x2="648" y2="150" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+  <line x1="560" y1="230" x2="648" y2="220" stroke="#475569" stroke-width="2" marker-end="url(#arr3)"/>
+
+  <text x="410" y="378" text-anchor="middle" font-size="12.5" fill="#4b5563">Serveur local : lancé par le harnais (commande npx…) — Serveur distant : URL + en-têtes d'authentification.</text>
+  <text x="410" y="400" text-anchor="middle" font-size="12.5" fill="#4b5569">Chaque outil annoncé occupe du contexte dès le démarrage : n'activer que les serveurs utiles au projet.</text>
+</svg>

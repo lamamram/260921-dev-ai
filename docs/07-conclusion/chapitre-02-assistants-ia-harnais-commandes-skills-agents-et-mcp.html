@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Support interactif de formation Ollama et IA générative pour le développement : 02 — Assistants IA — harnais, commandes, skills, agents et MCP">
+<title>02 — Assistants IA — harnais, commandes, skills, agents et MCP</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #30363d;
+  --primary: #f0883e; --primary2: #ffa657;
+  --success: #3fb950; --warning: #d29922; --danger: #f85149;
+  --text: #e6edf3; --text-muted: #8b949e; --code-bg: #010409; --radius: 10px;
+  --topbar-h: 3.25rem;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+  --primary: #bc4c00; --primary2: #953800;
+  --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+  --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+    --primary: #bc4c00; --primary2: #953800;
+    --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+    --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.7; transition: background .2s, color .2s; }
+
+/* TOPBAR — fixe, ne bouge jamais au scroll */
+.topbar {
+  position: sticky; top: 0; z-index: 200; height: var(--topbar-h);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .9rem; padding: 0 1rem;
+}
+.topbar .badge {
+  flex: 0 0 auto; background: var(--primary); color: #0d1117;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.topbar a.chapter-title {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: .5rem;
+  text-decoration: none; color: var(--text); font-weight: 700; font-size: .92rem;
+  overflow: hidden;
+}
+.topbar a.chapter-title:hover { color: var(--primary); }
+.topbar a.chapter-title .num { color: var(--primary); flex: 0 0 auto; }
+.topbar a.chapter-title .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-links { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem; }
+.topbar-link {
+  white-space: nowrap; padding: .4rem .8rem; border: 1px solid var(--border); border-radius: 20px;
+  font-size: .8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all .2s;
+}
+.topbar-link:hover { color: var(--primary); border-color: var(--primary); }
+.theme-toggle {
+  flex: 0 0 auto; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: .4rem .7rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+/* LAYOUT — sidebar gauche + contenu */
+.layout { display: flex; align-items: flex-start; }
+.sidebar {
+  flex: 0 0 280px; width: 280px;
+  position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; border-right: 1px solid var(--border); background: var(--surface);
+  padding: 1.25rem 1rem 2rem;
+}
+.objectifs {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1.25rem;
+}
+.objectifs-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.objectifs ul { margin: .4rem 0 0 1.1rem; }
+.objectifs li { font-size: .82rem; color: var(--text-muted); margin-bottom: .3rem; line-height: 1.4; }
+.side-nav { display: flex; flex-direction: column; gap: .1rem; }
+.side-nav button {
+  text-align: left; background: none; border: none; border-left: 3px solid transparent;
+  color: var(--text-muted); padding: .55rem .7rem; font-size: .87rem; font-weight: 500;
+  cursor: pointer; border-radius: 0 6px 6px 0; transition: all .15s;
+}
+.side-nav button:hover { color: var(--text); background: var(--surface2); }
+.side-nav button.active { color: var(--primary); border-left-color: var(--primary); background: var(--surface2); font-weight: 600; }
+.side-nav-sep { height: 1px; background: var(--border); margin: .6rem 0; }
+
+.content { flex: 1 1 auto; min-width: 0; }
+.tab-content { display: none; padding: 2rem 2.5rem 4rem; max-width: 1100px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* SECTIONS */
+h2 { font-size: 1.25rem; color: var(--primary2); margin: 1.8rem 0 .8rem; border-left: 3px solid var(--primary); padding-left: .75rem; }
+h3 { font-size: 1.05rem; color: var(--text); margin: 1.4rem 0 .6rem; }
+p { margin-bottom: .9rem; }
+ul, ol { padding-left: 1.4rem; margin-bottom: .9rem; }
+li { margin-bottom: .35rem; }
+
+/* RESSOURCES — liste sous forme de cartes plutôt que de puces */
+#tab-ressources ul { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: .5rem; }
+#tab-ressources li {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: .75rem 1rem; margin-bottom: 0;
+}
+#tab-ressources li a { color: var(--primary2); font-weight: 600; text-decoration: none; }
+#tab-ressources li a:hover { text-decoration: underline; }
+
+/* AIDE — divulgation progressive pas-à-pas */
+details.aide { margin-top: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+details.aide summary {
+  cursor: pointer; padding: .8rem 1.1rem; font-weight: 600; color: var(--primary);
+  list-style: none; display: flex; align-items: center; gap: .5rem;
+}
+details.aide summary::-webkit-details-marker { display: none; }
+details.aide summary::before { content: "▶"; font-size: .7rem; transition: transform .15s; }
+details.aide[open] summary::before { transform: rotate(90deg); }
+details.aide .aide-body { padding: 0 1.1rem 1.1rem; border-top: 1px solid var(--border); margin-top: .2rem; padding-top: 1rem; }
+img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+
+/* EXERCICE — un bloc par atelier, avec son aide pas-à-pas attachée juste en dessous */
+.exercice { padding: 1.3rem 0; border-top: 1px solid var(--border); }
+.exercice:first-of-type { border-top: none; padding-top: 0; }
+.exercice h3 { margin: 0 0 .8rem; color: var(--primary2); }
+
+/* CALLOUTS */
+.callout { border-radius: var(--radius); padding: .9rem 1.1rem; margin: 1.2rem 0; border-left: 4px solid; background: var(--surface2); }
+.callout.note   { border-color: var(--primary); }
+.callout.tip    { border-color: var(--success); }
+.callout.warn   { border-color: var(--warning); }
+.callout.danger { border-color: var(--danger); }
+.callout p:last-child { margin-bottom: 0; }
+.callout-title { font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .4rem; }
+.callout.note   .callout-title { color: var(--primary); }
+.callout.tip    .callout-title { color: var(--success); }
+.callout.warn   .callout-title { color: var(--warning); }
+.callout.danger .callout-title { color: var(--danger); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { background: var(--surface2); color: var(--primary2); text-align: left; padding: .6rem .9rem; font-weight: 600; border: 1px solid var(--border); }
+td { padding: .55rem .9rem; border: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: var(--surface2); }
+
+/* CODE */
+.code-block { position: relative; margin: 1rem 0; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; overflow-x: auto; }
+code { font-family: 'Consolas', 'Cascadia Code', monospace; font-size: .88rem; color: var(--primary2); }
+p code, li code, td code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: .05rem .35rem; }
+.copy-btn {
+  position: absolute; top: .5rem; right: .5rem;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+  padding: .25rem .6rem; font-size: .75rem; border-radius: 5px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--primary); color: #0d1117; }
+.copy-btn.copied { background: var(--success); color: #0d1117; }
+
+/* QUIZ */
+.quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1.2rem; }
+.quiz-question h4 { color: var(--primary2); margin-bottom: .9rem; font-size: .98rem; }
+.quiz-options { display: flex; flex-direction: column; gap: .5rem; }
+.quiz-option {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: .6rem .9rem; cursor: pointer;
+  font-size: .9rem; transition: all .2s; text-align: left; color: var(--text);
+}
+.quiz-option:hover:not(:disabled) { border-color: var(--primary); }
+.quiz-option.correct { border-color: var(--success); color: var(--success); }
+.quiz-option.wrong   { border-color: var(--danger);  color: var(--danger);  }
+.quiz-option:disabled { cursor: default; }
+.quiz-feedback { margin-top: .6rem; font-size: .87rem; color: var(--text-muted); font-style: italic; }
+.quiz-score {
+  background: var(--surface2); border: 1px solid var(--primary);
+  border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none;
+}
+.quiz-score .score-num { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+.quiz-score p { color: var(--text-muted); margin-top: .4rem; }
+.btn-restart { background: var(--primary); color: #0d1117; border: none; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 1rem; font-size: .9rem; }
+.btn-restart:hover { background: var(--primary2); }
+
+/* RESPONSIVE — sidebar devient une barre horizontale sous 900px */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: static; width: 100%; height: auto; max-height: 40vh;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .side-nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: .3rem; }
+  .side-nav button { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 6px 6px 0 0; }
+  .side-nav button.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+  .side-nav-sep { display: none; }
+  .tab-content { padding: 1.5rem 1.2rem 3rem; }
+  .topbar a.chapter-title { font-size: .82rem; }
+}
+</style>
+<link rel="stylesheet" href="assets/course-common.css">
+<script src="assets/course-common.js" defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">Ollama et IA générative pour le développement</span>
+  <a class="chapter-title" href="index.html" title="Retour à l'accueil de la formation">
+    <span class="num">02</span><span class="txt">Assistants IA — harnais, commandes, skills, agents et MCP</span>
+  </a>
+  <div class="topbar-links">
+    <a href="annexes.html" class="topbar-link">Annexes ↗</a>
+    <a class="topbar-link" href="index.html">Sommaire</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre thème clair et sombre">
+      <span id="theme-icon">🌙</span> <span id="theme-label">Sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="objectifs"><span class="objectifs-label">Objectifs</span><ul><li>Expliquer le rôle du harnais et la boucle agentique (sessions, tours, appels d&#x27;outil)</li><li>Comparer les assistants populaires (GitHub Copilot, Cursor, Claude Code, OpenCode) et choisir le bon outil</li><li>Configurer les composants d&#x27;un harnais : commandes, skills, agents/sous-agents, serveurs MCP</li><li>Brancher un assistant sur un modèle local servi par Ollama et maîtriser la confidentialité des données</li></ul></div>
+    <nav class="side-nav" id="main-nav">
+      <button class="active" onclick="showTab('du-modele-a-l-assistant-le-concept-de-harnais')">Du modèle à l&#x27;assistant : le concept de harnais</button>
+  <button class="" onclick="showTab('panorama-des-assistants-populaires')">Panorama des assistants populaires</button>
+  <button class="" onclick="showTab('la-fenetre-de-contexte-en-pratique-sessions-et-qualite')">La fenêtre de contexte en pratique : sessions et qualité</button>
+  <button class="" onclick="showTab('les-composants-du-harnais')">Les composants du harnais</button>
+  <button class="" onclick="showTab('commandes-capitaliser-les-taches-repetitives')">Commandes : capitaliser les tâches répétitives</button>
+  <button class="" onclick="showTab('skills-le-savoir-faire-charge-a-la-demande')">Skills : le savoir-faire chargé à la demande</button>
+  <button class="" onclick="showTab('agents-et-sous-agents-diviser-le-travail')">Agents et sous-agents : diviser le travail</button>
+  <button class="" onclick="showTab('mcp-connecter-des-outils-externes')">MCP : connecter des outils externes</button>
+  <button class="" onclick="showTab('permissions-et-bac-a-sable-securiser-l-automatisation')">Permissions et bac à sable : sécuriser l&#x27;automatisation</button>
+  <button class="" onclick="showTab('confidentialite-et-gestion-des-donnees')">Confidentialité et gestion des données</button>
+  <button class="" onclick="showTab('travailler-avec-un-modele-local-brancher-opencode-sur-ollama')">Travailler avec un modèle local : brancher OpenCode sur Ollama</button>
+  <button class="" onclick="showTab('les-cinq-cas-d-usage-en-pratique')">Les cinq cas d&#x27;usage en pratique</button>
+  <button class="" onclick="showTab('github-copilot-et-cursor-en-pratique')">GitHub Copilot et Cursor en pratique</button>
+  <button class="" onclick="showTab('depannage-de-l-assistant-local')">Dépannage de l&#x27;assistant local</button>
+  <button class="" onclick="showTab('de-l-assistant-au-flux-de-developpement')">De l&#x27;assistant au flux de développement</button>
+  <button class="" onclick="showTab('atelier-armer-son-assistant-avec-ollama')">Atelier : armer son assistant avec Ollama</button>
+  <button class="" onclick="showTab('quiz')">Quiz</button>
+    </nav>
+  </aside>
+  <div class="content">
+    <div id="tab-du-modele-a-l-assistant-le-concept-de-harnais" class="tab-content active">
+<h3>Le modèle seul ne sait rien faire</h3>
+<p>Rappel du jour 1 : un modèle reçoit des jetons et en prédit d'autres, une requête à la fois. Il ne lit pas de fichiers, n'exécute pas de commandes, ne parcourt pas le Web et ne se souvient pas de la session précédente. Posé sur un disque sous forme de poids GGUF, il est inerte.</p>
+<p>Le <strong>harnais</strong> (harness) est le logiciel qui entoure le modèle pour le transformer en agent utile :</p>
+<ul>
+<li>il <strong>assemble le contexte</strong> de chaque requête : prompt système, instructions du projet, historique de conversation, résultats d'outils ;</li>
+<li>il <strong>expose des outils</strong> au modèle : lire un fichier, écrire, exécuter une commande shell, rechercher dans le code ;</li>
+<li>il <strong>exécute les appels d'outil</strong> demandés par le modèle et lui <strong>réinjecte les résultats</strong> ;</li>
+<li>il <strong>conserve l'historique</strong> de la session et gère la fenêtre de contexte (troncature, compactage) ;</li>
+<li>il <strong>demande les autorisations</strong> avant les actions risquées.</li>
+</ul>
+<p>Claude.ai et Claude Code s'appuient sur des modèles proches, mais se comportent différemment parce que leurs harnais diffèrent : le second dispose d'outils de système de fichiers, d'un autre prompt système et d'une couche d'autorisations.</p>
+<div class="callout note"><div class="callout-title">Le réflexe de diagnostic</div><p>Quand deux assistants donnent des résultats différents « avec le même modèle », la variable est presque toujours le harnais : prompt système, jeu d'outils, politique d'autorisation, gestion du contexte. Avant d'accuser le modèle, vérifiez ce qui lui a été fourni — la plupart des sorties décevantes remontent au contexte ou au harnais, pas aux paramètres.</p></div>
+<h3>La boucle agentique</h3>
+<p>Le diagramme suivant montre le cœur mécanique de tout assistant : la boucle agentique. Le stagiaire envoie un message (un <strong>tour</strong>) ; le harnais assemble le contexte et interroge le modèle ; le modèle répond par du texte ou par un <strong>appel d'outil</strong> ; le harnais vérifie les permissions, exécute l'outil, réinjecte le résultat et repart en requête — jusqu'à ce que le modèle produise une réponse finale.</p>
+<p><img alt="La boucle de l'agent : le modèle propose, le harnais exécute" src="../08-images/ch2-boucle-agent.svg" /></p>
+<p>Deux enseignements à tirer du diagramme. D'abord, un seul tour utilisateur engendre souvent <strong>plusieurs requêtes au modèle</strong> : chaque résultat d'outil déclenche une nouvelle requête transportant tout le contexte accumulé. Ensuite, le modèle n'exécute jamais rien : un « appel d'outil » est du texte structuré (nom + arguments JSON) que le harnais interprète — et qui peut donc se tromper comme tout texte généré (chemin inexistant, option inventée).</p>
+<h3>Session, tour, requête : la hiérarchie</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Niveau</th>
+<th>Définition</th>
+<th>Persistance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Session</strong></td>
+<td>Séquence d'interactions du premier message à la réinitialisation</td>
+<td>L'historique s'accumule dans la fenêtre de contexte ; disparaît à la réinitialisation</td>
+</tr>
+<tr>
+<td><strong>Tour</strong></td>
+<td>Un message utilisateur + tout ce que l'agent fait en réponse jusqu'à rendre la main</td>
+<td>Contient une ou plusieurs requêtes</td>
+</tr>
+<tr>
+<td><strong>Requête</strong></td>
+<td>Un aller-retour harnais → modèle</td>
+<td>Unité de facturation (API distante) et de latence</td>
+</tr>
+</tbody>
+</table></div>
+<p>La session est la mémoire de travail de l'agent : ce qui n'y est pas n'existe pas pour lui. Elle commence vide, accumule messages et résultats d'outil, et s'achève par une réinitialisation ou un compactage. Un travail trop grand pour une seule fenêtre de contexte doit être réparti entre plusieurs sessions — le chapitre 3 formalisera cette discipline.</p>
+<div class="callout warn"><div class="callout-title">Un tour peut durer vingt minutes</div><p>La durée d'un tour dépend de l'agent, pas du stagiaire : il décide combien d'appels d'outil enchaîner avant de rendre la main. C'est ce qui rend possible le travail en autonomie — et c'est aussi pendant les longs tours que l'agent dérive sans supervision. Quand les résultats déçoivent régulièrement, demander des tours plus courts : un plan d'abord, une étape à la fois.</p></div>
+<h3>Complétion, chat, agent : trois générations d'assistance</h3>
+<p>Les assistants actuels empilent trois générations d'interfaces, toutes présentes dans un même outil :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Génération</th>
+<th>Interface</th>
+<th>Initiative</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Complétion</strong></td>
+<td>suggestion en ligne pendant la frappe</td>
+<td>le développeur écrit, l'assistant complète</td>
+<td>ghost text Copilot, Tab dans Cursor</td>
+</tr>
+<tr>
+<td><strong>Chat</strong></td>
+<td>conversation avec contexte sélectionné</td>
+<td>le développeur demande, l'assistant répond</td>
+<td>chat d'IDE, explication de code, génération de fonction</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>délégation d'une tâche complète</td>
+<td>le développeur spécifie un objectif, l'assistant lit, modifie, exécute, itère</td>
+<td>mode agent Copilot, Composer/Agent Cursor, OpenCode, Claude Code</td>
+</tr>
+</tbody>
+</table></div>
+<p>La génération agentique ne remplace pas les deux autres : la complétion reste imbattable pour le boilerplate en cours de frappe, le chat pour l'exploration rapide. Ce qui change avec l'agent, c'est l'unité de travail — on passe de la ligne ou de la fonction à la <strong>tâche</strong>, avec tout ce que cela implique de spécification, de vérification et de permissions. C'est cette bascule que les chapitres 2 et 3 outillent.</p>
+<h3>L'environnement et le système de fichiers</h3>
+<p>L'<strong>environnement</strong> est le monde sur lequel agit l'agent : tout ce qui est hors du harnais. Le système de fichiers en est la forme par défaut — l'agent le perçoit via les résultats d'outil et le modifie via les appels d'outil. Deux propriétés importantes :</p>
+<ul>
+<li>l'agent ne voit l'environnement <strong>que par instantanés</strong> : si un fichier change après sa lecture (modification manuelle, compilation), il raisonne sur sa copie périmée jusqu'à relecture ;</li>
+<li>l'environnement est la <strong>seule couche qui persiste</strong> : le contexte d'une session disparaît, les fichiers écrits restent. Tout ce que l'agent devra savoir demain doit aboutir dans l'environnement — c'est le fondement d'AGENTS.md et des systèmes de mémoire.</li>
+</ul>
+</div>
+
+<div id="tab-panorama-des-assistants-populaires" class="tab-content">
+<h3>Les grandes familles d'assistants</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Assistant</th>
+<th>Forme</th>
+<th>Points forts</th>
+<th>Points d'attention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitHub Copilot</strong></td>
+<td>Extension d'IDE (VS Code, JetBrains…)</td>
+<td>Complétion en ligne très intégrée, mode agent en progression, adossé aux modèles GitHub/OpenAI</td>
+<td>Abonnement par siège ; le code transite par les services GitHub</td>
+</tr>
+<tr>
+<td><strong>Cursor</strong></td>
+<td>IDE complet (fork de VS Code)</td>
+<td>Édition multi-fichiers fluide, indexation du projet, UX aboutie</td>
+<td>IDE propriétaire ; abonnement ; données traitées côté éditeur sauf mode « privacy »</td>
+</tr>
+<tr>
+<td><strong>Claude Code</strong></td>
+<td>CLI / terminal (+ intégrations IDE)</td>
+<td>Harnais agentique complet (outils, sous-agents, hooks, MCP), prompt système personnalisable</td>
+<td>Fonctionne sur API Anthropic (distante) ; coût par jeton</td>
+</tr>
+<tr>
+<td><strong>Codex CLI</strong></td>
+<td>CLI / terminal</td>
+<td>Agent OpenAI en terminal, modes d'approbation, sandbox</td>
+<td>Adossé aux modèles OpenAI</td>
+</tr>
+<tr>
+<td><strong>OpenCode</strong></td>
+<td>CLI / terminal (TUI), client-serveur</td>
+<td><strong>Open source et agnostique</strong> : n'importe quel fournisseur, y compris Ollama en local ; commandes, skills, agents, MCP</td>
+<td>Jeunesse du projet ; qualité dépendante du modèle branché</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le programme officiel de la formation cite GitHub Copilot et Cursor comme références côté IDE, et OpenCode comme harnais ouvert branché sur Ollama. Ce sont les deux extrémités du spectre : produits intégrés clés en main d'un côté, harnais ouvert à composer soi-même de l'autre. Les concepts — outils, permissions, contextes — sont communs à tous.</p>
+<h3>Fonctionnalités principales attendues d'un assistant</h3>
+<p>Le plan officiel liste cinq usages ; voici ce que chacun recouvre concrètement :</p>
+<ul>
+<li><strong>Brainstorming</strong> : explorer des options de conception, comparer des approches, générer des variantes de nommage ou de modélisation. L'agent excelle ici car le coût d'une idée est une phrase.</li>
+<li><strong>Documentation</strong> : générer README, commentaires de fonctions, documentation d'API à partir du code existant — et la maintenir à jour quand le code bouge.</li>
+<li><strong>Implémentations</strong> : écrire du code nouveau (fonctions, composants, endpoints) à partir d'une spécification, en s'appuyant sur les conventions du projet lues dans le contexte.</li>
+<li><strong>Tests</strong> : générer des suites de tests unitaires, compléter les cas limites oubliés, écrire les tests d'une fonction avant son implémentation (TDD — atelier du chapitre 3).</li>
+<li><strong>Revues</strong> : analyser un diff, signaler les risques (sécurité, performance, lisibilité), vérifier la conformité aux conventions du projet.</li>
+</ul>
+<div class="callout tip"><div class="callout-title">Le choix de l'outil suit la contrainte, pas la mode</div><p>Code confidentiel qui ne doit pas sortir du SI → harnais open source + modèle local (OpenCode + Ollama). Confort maximal sur projet non sensible → IDE agentique intégré (Cursor, Copilot). Automatisation en terminal sur gros dépôts → CLI agentique (Claude Code, Codex CLI, OpenCode). La section « Confidentialité » ci-dessous donne les critères précis.</p></div>
+<h3>Grille de choix d'un assistant pour l'équipe</h3>
+<p>Six critères à instruire avant de généraliser un assistant dans une équipe :</p>
+<ol>
+<li><strong>Confidentialité</strong> : où vont le code et les prompts ? Un mode entreprise sans entraînement ni rétention est-il disponible, ou faut-il basculer en local ?</li>
+<li><strong>Modèles accessibles</strong> : le harnais permet-il de choisir — et notamment de pointer vers un endpoint compatible OpenAI local (Ollama) ?</li>
+<li><strong>Configurabilité versionnable</strong> : règles projet, commandes, MCP se règlent-ils par fichiers dans le dépôt (relus en merge request) ou seulement par interface graphique individuelle ?</li>
+<li><strong>Permissions et bac à sable</strong> : quel contrôle sur les écritures, le shell et le réseau ? Existe-t-il un mode plan en lecture seule ?</li>
+<li><strong>Écosystème d'outils</strong> : MCP supporté ? Les intégrations internes (tickets, CI, documentation) existent-elles déjà côté serveurs ?</li>
+<li><strong>Modèle économique</strong> : abonnement par siège, facturation par jeton, ou open source avec coût d'infrastructure interne ?</li>
+</ol>
+<p>La réponse à ces six critères dépend du contexte de l'organisation (sensibilité du code, budget, maturité Git) — pas d'un palmarès absolu d'outils. C'est cette grille que l'atelier de l'étape 6 met en pratique sur OpenCode.</p>
+</div>
+
+<div id="tab-la-fenetre-de-contexte-en-pratique-sessions-et-qualite" class="tab-content">
+<h3>Le budget d'attention</h3>
+<p>Chaque jeton du contexte dispose d'une quantité finie d'influence sur la génération : c'est le <strong>budget d'attention</strong>. L'instruction du stagiaire est un signal de volume fixe ; tous les autres jetons de la fenêtre sont du bruit concurrent. Quand le contexte grandit, le rapport signal/bruit diminue : une consigne qui dominait une fenêtre de 10 000 jetons devient un bruit de fond à 150 000.</p>
+<p>Le symptôme ressemble à de la désobéissance : l'agent accepte une contrainte puis s'en éloigne au fil de la session ; recoller la contrainte n'aide que brièvement. La cause n'est pas l'instruction — c'est tout ce qui entre en concurrence avec elle.</p>
+<h3>Zone intelligente, zone stupide</h3>
+<p>Au début d'une session, l'agent est vif et concentré : c'est la <strong>zone intelligente</strong>. À mesure que la session grandit, il dérive vers la <strong>zone stupide</strong> : moins rigoureux, plus oublieux, plus sujet aux hallucinations de fidélité. Même modèle, même harnais — seulement davantage de contexte. Pour les modèles de pointe, la bascule est souvent estimée autour de 125 000 à 150 000 jetons ; avec un petit modèle local (8B, fenêtre réelle de 16k), elle arrive <strong>beaucoup plus tôt</strong>.</p>
+<p>La dégradation est progressive et sans message d'erreur : chaque tour est à peine moins bon que le précédent. Signes courants : oubli d'une instruction donnée vingt tours plus tôt, répétition d'une erreur déjà corrigée, affirmation assurée contredite par le contexte.</p>
+<div class="callout note"><div class="callout-title">Les réflexes qui maintiennent l'agent en zone intelligente</div><p>Une tâche par session ; réinitialiser quand la tâche change ; compacter ou passer le relais quand la session enfle ; charger le contexte <strong>pertinent</strong> plutôt que massif ; reformuler les contraintes importantes au lieu de compter sur leur énoncé initial. La récupération passe par le retrait de contexte, jamais par son ajout.</p></div>
+<h3>Résultats d'outil : le contexte invisible qui sature la fenêtre</h3>
+<p>Les résultats d'outil constituent l'essentiel du contexte d'une session de programmation : chaque fichier lu, chaque test exécuté, chaque recherche arrive intégralement dans la fenêtre et continue d'occuper des jetons longtemps après avoir cessé d'être utile. Quelques résultats volumineux — un journal de test verbeux, un fichier généré lu en entier — rapprochent la session du bord de la fenêtre plus vite que la conversation elle-même. Avec un modèle local à petite fenêtre, cette vigilance est décuplée : préférer des recherches ciblées (grep sur un motif) à la lecture de fichiers entiers.</p>
+</div>
+
+<div id="tab-les-composants-du-harnais" class="tab-content">
+<h3>Une configuration à cinq étages</h3>
+<p>Le diagramme suivant récapitule les composants configurables d'un harnais moderne, organisés autour du modèle : le prompt système et la mémoire projet (AGENTS.md) nourrissent le contexte ; les commandes, skills, agents et serveurs MCP étendent les capacités ; les permissions et le bac à sable bornent le rayon d'action.</p>
+<p><img alt="Les composants d'un harnais de développement" src="../08-images/ch2-composants-harnais.svg" /></p>
+<p>Le message central du diagramme tient en une phrase : <strong>même modèle, harnais différents, comportements différents</strong>. L'essentiel de la configuration d'un assistant vise le harnais — fichiers Markdown et JSON dans le projet —, pas le modèle. Ces fichiers sont versionnables, partageables en équipe et relus comme du code : c'est ce qui transforme l'assistant d'un jouet individuel en outil d'ingénierie.</p>
+<p>Les sections qui suivent détaillent les quatre composants que le plan officiel qualifie d'« indispensables » : commandes, skills, agents, MCP — en les illustrant dans OpenCode, le harnais retenu pour les ateliers parce qu'open source et branchable sur Ollama. Les concepts se transposent tels quels dans Copilot (instructions et MCP), Cursor (rules et MCP) ou Claude Code (slash commands, skills, subagents, MCP).</p>
+<h3>AGENTS.md : la mémoire du projet</h3>
+<p>Avant les composants actifs, un composant passif mais central : <strong>AGENTS.md</strong>. C'est un fichier Markdown, posé à la racine du dépôt, que le harnais charge dans le contexte au début de chaque session. Il contient les consignes permanentes du projet : conventions de code, commandes de build et de test, architecture, vocabulaire métier, interdits.</p>
+<p>Le modèle étant sans état (jour 1), AGENTS.md est la réponse à la question « où écrire une correction pour que toutes les sessions futures la lisent ? ». Une convention expliquée trois fois en session s'oublie trois fois ; écrite dans AGENTS.md, elle est relue à chaque démarrage.</p>
+<p>Bonnes pratiques de rédaction :</p>
+<ul>
+<li>des <strong>faits actionnables</strong>, pas de la prose institutionnelle : la commande exacte de lint, le chemin des tests, la règle de nommage ;</li>
+<li>des <strong>sections courtes</strong> avec titres explicites — le fichier entre tel quel dans la fenêtre de contexte, chaque jeton compte ;</li>
+<li>un contenu <strong>versionné et relu</strong> comme le reste du code : un AGENTS.md faux est pire qu'absent, il désinforme toutes les sessions ;</li>
+<li>pour les monorepos, des AGENTS.md <strong>par sous-répertoire</strong> : le harnais charge celui du dossier de travail.</li>
+</ul>
+<h3>Système de mémoire : la continuité entre sessions</h3>
+<p>AGENTS.md porte les consignes <strong>statiques</strong> du projet. Le <strong>système de mémoire</strong> du harnais complète ce dispositif pour l'information <strong>dynamique</strong> : les faits appris en session qu'il faut retrouver demain. Son fonctionnement type :</p>
+<ul>
+<li>en fin de tâche, l'agent (ou le stagiaire, sur demande explicite) <strong>écrit</strong> dans un fichier de mémoire — décisions prises, pièges rencontrés, préférences exprimées ;</li>
+<li>au démarrage de chaque session, le harnais <strong>recharge</strong> ce fichier dans le contexte.</li>
+</ul>
+<p>C'est la seule façon de rendre un agent « avec état » entre les sessions : le modèle reste sans état, mais le harnais fabrique la continuité en relisant l'environnement. Formuler une demande explicite — « retiens que les migrations se valident avec make db-test » — est plus fiable que d'espérer une mémorisation implicite.</p>
+<p>La distinction des échelles mérite d'être posée une fois pour toutes :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Échelle</th>
+<th>Mécanisme</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dans la session</td>
+<td>Historique de la fenêtre de contexte</td>
+<td>La conversation en cours</td>
+</tr>
+<tr>
+<td>Entre les sessions</td>
+<td>Système de mémoire, fichiers de relais</td>
+<td>Décision d'architecture notée hier</td>
+</tr>
+<tr>
+<td>Pour tout le projet</td>
+<td>AGENTS.md, commandes, skills</td>
+<td>Conventions, commandes de build</td>
+</tr>
+<tr>
+<td>Pour tout l'environnement</td>
+<td>Système de fichiers</td>
+<td>Le code lui-même</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+
+<div id="tab-commandes-capitaliser-les-taches-repetitives" class="tab-content">
+<h3>Le principe</h3>
+<p>Une <strong>commande</strong> est un prompt pré-rédigé, déclenché par un raccourci (généralement <code>/nom-de-la-commande</code>), qui exécute une tâche répétitive avec un libellé garanti. Au lieu de retaper chaque matin « lance la suite de tests, analyse les échecs et propose des correctifs », l'équipe écrit la commande une fois et l'invoque par <code>/test</code>.</p>
+<p>Une commande se définit par :</p>
+<ul>
+<li>un <strong>template</strong> : le prompt envoyé au modèle, avec un emplacement <code>$ARGUMENTS</code> pour les paramètres saisis à l'invocation ;</li>
+<li>un <strong>agent</strong> cible (optionnel) : l'agent qui exécute la commande ;</li>
+<li>un <strong>modèle</strong> (optionnel) : forcer un modèle précis, par exemple un petit modèle rapide pour une tâche mécanique ;</li>
+<li>une <strong>description</strong> : affichée dans la liste des commandes.</li>
+</ul>
+<h3>Dans OpenCode : Markdown ou JSON</h3>
+<p>Définition en Markdown — un fichier par commande dans <code>.opencode/commands/</code> (projet) ou <code>~/.config/opencode/commands/</code> (global) :</p>
+<div class="code-block"><pre><code class="language-markdown">---
+description: Lancer les tests avec couverture
+agent: build
+model: anthropic/claude-3-5-sonnet-20241022
+---
+
+Lance la suite de tests complète avec rapport de couverture et affiche les échecs.
+Concentre-toi sur les tests en échec et propose des correctifs.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Ou en JSON dans <code>opencode.json</code>, avec <code>$ARGUMENTS</code> pour la paramétrer :</p>
+<div class="code-block"><pre><code class="language-jsonc">{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;command&quot;: {
+    &quot;component&quot;: {
+      &quot;template&quot;: &quot;Crée un nouveau composant React nommé $ARGUMENTS avec support TypeScript.\nInclus un typage propre et la structure de base.&quot;,
+      &quot;description&quot;: &quot;Créer un nouveau composant&quot;
+    }
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Invocation : <code>/component PanierAchat</code> — le texte saisi remplace <code>$ARGUMENTS</code> dans le template.</p>
+<h3>Quand créer une commande ?</h3>
+<p>Le critère est le même que pour un alias shell ou un script : dès qu'un prompt est <strong>tapé plus de trois fois</strong> avec la même intention. Cas typiques en entreprise :</p>
+<ul>
+<li><code>/revue</code> : appliquer la grille de revue de l'équipe au diff courant ;</li>
+<li><code>/ticket 1234</code> : reformater un contenu en ticket conforme au template du projet ;</li>
+<li><code>/release</code> : générer le changelog depuis les commits depuis le dernier tag ;</li>
+<li><code>/doc</code> : mettre à jour la documentation d'un module après modification.</li>
+</ul>
+<div class="callout tip"><div class="callout-title">Commandes versionnées = onboarding accéléré</div><p>Les commandes placées dans <code>.opencode/commands/</code> du dépôt partent avec le projet : un nouveau développeur clone le dépôt et hérite de toute la pratique capitalisée par l'équipe. C'est l'un des gains les plus concrets du développement assisté en équipe — la connaissance des prompts efficaces cesse d'être un savoir tacite.</p></div>
+</div>
+
+<div id="tab-skills-le-savoir-faire-charge-a-la-demande" class="tab-content">
+<h3>Commande ou skill ?</h3>
+<p>La <strong>commande</strong> est déclenchée explicitement par le stagiaire (<code>/nom</code>). Le <strong>skill</strong> (compétence) est chargé <strong>automatiquement par le modèle</strong> quand la tâche en cours correspond à sa description : c'est un savoir-faire conditionnel, pas un raccourci. Un skill répond à « comment bien faire X dans ce projet », une commande à « fais X maintenant ».</p>
+<h3>Anatomie d'un skill</h3>
+<p>Un skill est un dossier contenant un fichier <code>SKILL.md</code> avec un frontmatter YAML :</p>
+<div class="code-block"><pre><code class="language-markdown">---
+name: migration-base-donnees
+description: Procédure de création et de validation d'une migration de base de données. À déclencher quand le stagiaire mentionne migration, schéma, alembic ou flyway.
+---
+
+# Migration de base de données
+
+1. Créer la migration dans `db/migrations/` avec le préfixe date.
+2. Ne jamais modifier une migration déjà appliquée en production.
+3. Toujours fournir la migration inverse (down).
+4. Valider avec `make db-test` avant de proposer le commit.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Emplacement : <code>.opencode/skills/&lt;nom-du-skill&gt;/SKILL.md</code> dans le projet (ou le dossier de configuration global du harnais). Le corps du skill est du Markdown libre : instructions pas à pas, exemples, références vers d'autres fichiers du dépôt.</p>
+<h3>La description est le déclencheur</h3>
+<p>Le modèle ne lit le corps d'un skill <strong>que si sa description l'a convaincu de le charger</strong> — c'est le mécanisme de divulgation progressive (progressive disclosure) : le contexte ne contient en permanence que le nom et la description des skills ; le contenu complet n'arrive que lorsqu'il sert. Conséquence directe sur la rédaction :</p>
+<ul>
+<li>la <code>description</code> doit couvrir <strong>ce que fait le skill ET quand le déclencher</strong>, en une phrase ;</li>
+<li>y placer <strong>littéralement les mots-clés</strong> que le stagiaire est susceptible d'employer (« migration », « flyway », « schema ») ;</li>
+<li>un skill jamais déclenché est un skill dont la description ne correspond pas au vocabulaire réel de l'équipe.</li>
+</ul>
+<div class="callout note"><div class="callout-title">Skills contre prompt système</div><p>Tout mettre dans le prompt système ou dans AGENTS.md sature la fenêtre : chaque session paie ces jetons, qu'elles en aient besoin ou non. Les skills déplacent le savoir-faire spécialisé derrière un pointeur de contexte — coût permanent quasi nul, chargement à la demande. Règle de répartition : conventions universelles du projet dans AGENTS.md ; procédures spécialisées dans des skills.</p></div>
+</div>
+
+<div id="tab-agents-et-sous-agents-diviser-le-travail" class="tab-content">
+<h3>Agent primaire, sous-agent</h3>
+<p>Un <strong>agent</strong> au sens du harnais est un rôle configuré : un prompt, un modèle, des outils et des permissions. On distingue :</p>
+<ul>
+<li>l'<strong>agent primaire</strong> : celui à qui le stagiaire parle directement (ex. <code>build</code> pour développer, <code>plan</code> pour planifier) ;</li>
+<li>le <strong>sous-agent</strong> (subagent) : un agent spécialisé que l'agent primaire délègue via un outil <code>task</code>. Le sous-agent travaille dans <strong>sa propre fenêtre de contexte</strong>, puis rend un résumé à l'agent appelant.</li>
+</ul>
+<p>La délégation à un sous-agent a deux bénéfices directs :</p>
+<ol>
+<li><strong>isolation du contexte</strong> : une recherche ouverte qui parcourt cinquante fichiers sature la fenêtre du sous-agent, pas celle de l'agent principal — ce dernier ne reçoit que la synthèse ;</li>
+<li><strong>spécialisation</strong> : un prompt dédié (« tu es un relecteur de code, concentre-toi sur sécurité, performance, maintenabilité ») et des permissions réduites (lecture seule pour un relecteur) produisent un travail plus fiable qu'un agent généraliste.</li>
+</ol>
+<h3>Configuration dans OpenCode</h3>
+<p>Les agents se déclarent dans <code>opencode.json</code> :</p>
+<div class="code-block"><pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;agent&quot;: {
+    &quot;build&quot;: {
+      &quot;mode&quot;: &quot;primary&quot;,
+      &quot;model&quot;: &quot;anthropic/claude-sonnet-4-20250514&quot;,
+      &quot;prompt&quot;: &quot;{file:./prompts/build.txt}&quot;,
+      &quot;permission&quot;: { &quot;edit&quot;: &quot;allow&quot;, &quot;bash&quot;: &quot;allow&quot; }
+    },
+    &quot;plan&quot;: {
+      &quot;mode&quot;: &quot;primary&quot;,
+      &quot;permission&quot;: { &quot;edit&quot;: &quot;deny&quot;, &quot;bash&quot;: &quot;deny&quot; }
+    },
+    &quot;code-reviewer&quot;: {
+      &quot;description&quot;: &quot;Relit le code : bonnes pratiques et risques&quot;,
+      &quot;mode&quot;: &quot;subagent&quot;,
+      &quot;prompt&quot;: &quot;Tu es un relecteur de code. Concentre-toi sur la sécurité, la performance et la maintenabilité.&quot;,
+      &quot;permission&quot;: { &quot;edit&quot;: &quot;deny&quot; }
+    }
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Points à remarquer :</p>
+<ul>
+<li><code>mode: primary</code> ou <code>subagent</code> distingue les deux rôles ;</li>
+<li><code>prompt</code> accepte un fichier externe (<code>{file:...}</code>) — le prompt devient un artefact versionné ;</li>
+<li><code>permission</code> par agent <strong>surcharge</strong> la configuration globale : l'agent <code>plan</code> ne peut ni éditer ni exécuter, le relecteur ne peut pas éditer. Le mode Plan d'OpenCode n'est rien d'autre que l'agent <code>plan</code> avec <code>edit: deny</code>.</li>
+</ul>
+<h3>Le bon grain de délégation</h3>
+<p>Déléguer au sous-agent : les recherches ouvertes (« où est gérée l'authentification ? »), les revues de gros diffs, la génération de tests d'un module entier, toute tâche dont les résultats intermédiaires n'intéressent pas l'agent principal. Garder dans l'agent principal : les modifications fines qui exigent le contexte de la conversation en cours, les décisions de conception.</p>
+<div class="callout warn"><div class="callout-title">Un sous-agent ne partage pas la conversation</div><p>Le sous-agent démarre avec le brief que l'agent principal lui transmet — rien d'autre. Un brief incomplet produit un travail hors sujet qui coûtera plus cher à corriger que la tâche directe. Vérifier la qualité de la délégation (le prompt d'appel) avant d'incriminer le sous-agent.</p></div>
+</div>
+
+<div id="tab-mcp-connecter-des-outils-externes" class="tab-content">
+<h3>Le problème d'intégration que MCP résout</h3>
+<p>Sans norme, chaque harnais devrait développer sa propre intégration Linear, Slack, GitHub ou base de données — écrite et maintenue séparément pour chaque assistant. <strong>MCP</strong> (Model Context Protocol) inverse la charge : l'intégration est écrite <strong>une fois</strong> sous forme de serveur MCP, et tout harnais compatible s'y connecte.</p>
+<p>Le schéma ci-dessous montre l'articulation : le harnais, client MCP, se connecte à des serveurs (GitHub, Playwright, base de données, Context7) ; chaque serveur traduit le protocole en appels vers le système réel et annonce ses outils, qui viennent s'ajouter aux outils intégrés de l'agent.</p>
+<p><img alt="MCP : écrire l'intégration une fois, l'utiliser partout" src="../08-images/ch2-integration-mcp.svg" /></p>
+<p>Lecture du diagramme : l'agent « n'appelle jamais MCP » — il appelle un outil ordinaire, que le harnais a obtenu d'un serveur MCP. Le protocole expose aussi des <strong>ressources</strong> (données en lecture seule) et des <strong>prompts</strong> (modèles réutilisables), mais son usage principal est de fournir des outils.</p>
+<h3>Configurer un serveur MCP</h3>
+<p>Dans OpenCode, la configuration <code>mcp</code> distingue serveurs locaux (lancés par le harnais) et distants (URL + authentification) :</p>
+<div class="code-block"><pre><code class="language-json">{
+  &quot;mcp&quot;: {
+    &quot;playwright&quot;: {
+      &quot;type&quot;: &quot;local&quot;,
+      &quot;command&quot;: [&quot;npx&quot;, &quot;-y&quot;, &quot;@playwright/mcp&quot;],
+      &quot;enabled&quot;: true,
+      &quot;environment&quot;: { &quot;BROWSER&quot;: &quot;chromium&quot; }
+    },
+    &quot;github&quot;: {
+      &quot;type&quot;: &quot;remote&quot;,
+      &quot;url&quot;: &quot;https://api.githubcopilot.com/mcp/&quot;,
+      &quot;enabled&quot;: true,
+      &quot;headers&quot;: { &quot;Authorization&quot;: &quot;Bearer {env:GITHUB_TOKEN}&quot; }
+    }
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<ul>
+<li>serveur <strong>local</strong> : une commande que le harnais lance comme processus enfant ; les variables d'environnement se règlent dans <code>environment</code> ;</li>
+<li>serveur <strong>distant</strong> : une URL, avec en-têtes d'authentification — l'interpolation <code>{env:VAR}</code> lit la variable d'environnement du poste sans écrire le secret dans le fichier de configuration ;</li>
+<li><code>"enabled": false</code> désactive un serveur hérité sans supprimer sa configuration.</li>
+</ul>
+<p>La commande <code>opencode mcp add</code> accompagne l'ajout interactif d'un serveur. Les autres harnais suivent le même modèle : Cursor et Claude Code disposent d'une configuration MCP équivalente (fichier JSON, serveurs locaux ou distants), Copilot prend en charge MCP dans ses versions récentes.</p>
+<h3>Le coût caché : le contexte</h3>
+<p>Chaque outil annoncé par un serveur arrive avec sa définition complète — nom, description, schéma de paramètres — chargée dans la fenêtre de contexte <strong>dès le démarrage de la session</strong>. Quelques serveurs généreux suffisent à démarrer chaque session avec des milliers de jetons de schémas d'outils, avant même la première question, et consomment le budget d'attention pour des outils que la tâche n'utilisera jamais.</p>
+<p>Les parades, par ordre de préférence :</p>
+<ol>
+<li>n'activer que les serveurs <strong>réellement nécessaires</strong> au projet courant ;</li>
+<li>utiliser un harnais à <strong>recherche d'outils</strong> : le contexte ne contient qu'un pointeur vers le catalogue, la définition complète n'est chargée qu'au moment de l'appel ;</li>
+<li>restreindre la liste d'outils exposés quand le serveur le permet.</li>
+</ol>
+<div class="callout warn"><div class="callout-title">MCP et données sensibles</div><p>Un serveur MCP donne à l'agent un accès réel : base de données, dépôt, navigateur. Les mêmes précautions s'appliquent que pour un accès humain — comptes en lecture seule par défaut, périmètre minimal, jetons à durée de vie limitée. Un agent doté d'un MCP « base de données » en écriture peut détruire des données aussi sûrement qu'un humain, avec la même absence d'intention.</p></div>
+</div>
+
+<div id="tab-permissions-et-bac-a-sable-securiser-l-automatisation" class="tab-content">
+<h3>Les deux leviers de sécurité</h3>
+<p>Le harnais protège l'environnement par deux mécanismes complémentaires, qui résolvent le même problème par deux voies opposées :</p>
+<ul>
+<li>les <strong>permissions</strong> décident <strong>avant</strong> : quels appels d'outil s'exécutent librement, lesquels demandent une validation humaine, lesquels sont interdits. Elles maintiennent le stagiaire dans la boucle — au prix d'interruptions ;</li>
+<li>le <strong>bac à sable</strong> (sandbox) limite <strong>pendant</strong> : l'agent s'exécute dans un environnement isolé (conteneur, VM, shell restreint) où le rayon d'action d'un mauvais appel est contenu. Il mobilise de l'infrastructure plutôt que de l'attention.</li>
+</ul>
+<p>Plus l'isolation du bac à sable est forte, moins les permissions ont besoin d'être restrictives — et inversement.</p>
+<h3>La demande d'autorisation</h3>
+<p>Quand un appel d'outil n'est pas préapprouvé, le harnais se met en pause et affiche une <strong>demande d'autorisation</strong>. Trois issues : approuver une fois, approuver pour la session, ou refuser. Le refus n'est pas un simple blocage : il est renvoyé au modèle comme un résultat d'outil ordinaire, et la plupart des harnais permettent d'y joindre un message — « pas comme ça, utilise le script de migration » arrive précisément au moment où le modèle décide de la suite. Refuser est un acte de pilotage.</p>
+<p>Le coût : chaque demande est une attente synchrone. Un agent qui déclenche des demandes en permanence ne peut pas travailler sans supervision.</p>
+<h3>Les modes d'autorisation</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Lectures</th>
+<th>Écritures et shell</th>
+<th>Usage typique</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Lecture seule / plan</td>
+<td>automatiques</td>
+<td>bloquées</td>
+<td>Recherche, planification, revue</td>
+</tr>
+<tr>
+<td>Par défaut</td>
+<td>automatiques</td>
+<td>sur autorisation</td>
+<td>Travail quotidien supervisé</td>
+</tr>
+<tr>
+<td>Modification automatique</td>
+<td>automatiques</td>
+<td>éditions automatiques, shell sur demande</td>
+<td>Dépôts fiables, changements mécaniques</td>
+</tr>
+<tr>
+<td>Entièrement automatique (« YOLO »)</td>
+<td>automatiques</td>
+<td>automatiques</td>
+<td>Bacs à sable uniquement, exécutions sans supervision</td>
+</tr>
+</tbody>
+</table></div>
+<p>Un <strong>mode agent</strong> associe un niveau d'autorisation <strong>et</strong> des instructions de comportement injectées dans le prompt système : le mode plan ne se contente pas de bloquer les écritures, il indique au modèle qu'il est en phase de planification, pour qu'il lise et questionne au lieu de lutter contre la barrière.</p>
+<p>Changer de mode au cours d'une tâche est normal et gratuit : mode plan pendant que l'approche se dessine, mode par défaut pour les premières modifications délicates, modification automatique quand l'agent a fait ses preuves, contournement complet uniquement dans un bac à sable.</p>
+<h3>Permissions fines dans OpenCode</h3>
+<p>La configuration <code>permission</code> accepte trois actions — <code>allow</code>, <code>ask</code>, <code>deny</code> — par outil, avec des motifs par commande :</p>
+<div class="code-block"><pre><code class="language-json">&quot;permission&quot;: {
+  &quot;edit&quot;: &quot;deny&quot;,
+  &quot;bash&quot;: { &quot;git *&quot;: &quot;allow&quot;, &quot;rm *&quot;: &quot;deny&quot;, &quot;*&quot;: &quot;ask&quot; },
+  &quot;external_directory&quot;: { &quot;~/secrets/**&quot;: &quot;deny&quot;, &quot;*&quot;: &quot;allow&quot; }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Règles de lecture de cette configuration :</p>
+<ul>
+<li>les outils pilotables incluent <code>read</code>, <code>edit</code>, <code>bash</code>, <code>glob</code>, <code>grep</code>, <code>webfetch</code>, <code>websearch</code>, <code>task</code>, <code>external_directory</code>… ;</li>
+<li>pour un objet <code>{ motif: action }</code>, <strong>l'ordre d'insertion compte</strong> : la <strong>dernière</strong> règle correspondante l'emporte — placer les règles larges d'abord, les exceptions fines ensuite ;</li>
+<li><code>permission: "allow"</code> en chaîne au niveau racine est un raccourci « tout autoriser » — rarement ce que l'on veut ;</li>
+<li>la configuration par agent surcharge la configuration globale.</li>
+</ul>
+<h3>Les niveaux de bac à sable</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Niveau</th>
+<th>Ce que c'est</th>
+<th>Ce que cela contient</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Shell restreint</td>
+<td>Confinement OS autour de chaque commande</td>
+<td>Écritures hors projet, accès réseau</td>
+</tr>
+<tr>
+<td>Conteneur</td>
+<td>Système de fichiers neuf, sans identifiants montés, détruit après usage</td>
+<td>Tout ce que l'agent fait sur sa machine</td>
+</tr>
+<tr>
+<td>VM / cloud</td>
+<td>Machine entièrement séparée</td>
+<td>Tout, y compris les sorties au niveau noyau</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout danger"><div class="callout-title">Ce qu'aucun bac à sable ne contient</div><p>Les actions qui en sortent <strong>légitimement</strong> : un agent doté des identifiants Git peut pousser du code ; un agent avec accès réseau peut appeler des API de production. Décider ce qui franchit la frontière (identifiants montés, réseau ouvert, webhooks) <strong>avant</strong> de choisir le niveau d'isolation. Le bac à sable protège la machine, pas le dépôt distant ni le client.</p></div>
+</div>
+
+<div id="tab-confidentialite-et-gestion-des-donnees" class="tab-content">
+<h3>Où vont les données ?</h3>
+<p>La question centrale pour un usage professionnel : que deviennent le code, les prompts et les résultats ? Trois régimes coexistent :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Régime</th>
+<th>Flux de données</th>
+<th>Exemples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Cloud éditeur</strong></td>
+<td>Code et prompts traités sur les serveurs de l'éditeur ; conservation selon contrat</td>
+<td>Copilot, Cursor (mode standard), Claude Code</td>
+</tr>
+<tr>
+<td><strong>Cloud avec engagement contractuel</strong></td>
+<td>Traitement distant, mais sans entraînement des modèles sur les données et sans rétention (mode entreprise / privacy)</td>
+<td>Copilot Business, Cursor Privacy Mode, offres entreprises</td>
+</tr>
+<tr>
+<td><strong>Local intégral</strong></td>
+<td>Aucune donnée ne quitte la machine</td>
+<td>OpenCode + Ollama sur le poste</td>
+</tr>
+</tbody>
+</table></div>
+<p>Les points de vigilance contractuels, dans l'ordre : le code sert-il à <strong>entraîner</strong> les modèles ? Quelle <strong>durée de rétention</strong> des prompts ? Les données transitent-elles par des <strong>sous-traitants</strong> ? Quel <strong>périmètre géographique</strong> de traitement ? Ces questions relèvent du DPO ou du RSSI de l'organisation — le développeur doit savoir les poser avant d'activer un assistant sur un dépôt sensible.</p>
+<div class="callout note"><div class="callout-title">Le code n'est pas la seule donnée sensible</div><p>Les prompts révèlent le vocabulaire métier, les chemins de fichiers trahissent l'architecture, les résultats de tests contiennent des jeux de données réels, et les journaux d'erreurs embarquent parfois des secrets (chaînes de connexion, jetons). Un assistant configuré trop largement diffuse plus que du code : vérifier qu'aucun <code>.env</code> ni fichier de secrets n'entre dans le contexte, et configurer les permissions <code>external_directory</code> en conséquence.</p></div>
+<h3>Les secrets dans la boucle agentique</h3>
+<p>Trois règles simples :</p>
+<ol>
+<li>les secrets vivent dans des <strong>variables d'environnement</strong> ou un gestionnaire de secrets, jamais dans les fichiers de configuration de l'assistant — la syntaxe <code>{env:GITHUB_TOKEN}</code> des en-têtes MCP existe précisément pour cela ;</li>
+<li>les fichiers de secrets (<code>.env</code>, <code>*.pem</code>, trousseaux) sont <strong>exclus du contexte</strong> par configuration (permissions <code>deny</code>, <code>.gitignore</code>, règles d'indexation de l'IDE) ;</li>
+<li>un agent qui doit s'authentifier reçoit un <strong>jeton à périmètre et durée minimaux</strong>, pas un compte de service administrateur.</li>
+</ol>
+<h3>Le local comme réponse radicale</h3>
+<p>Avec OpenCode branché sur Ollama (section suivante), la totalité de la boucle — modèle, contexte, outils — s'exécute sur le poste : aucune donnée ne transite par un tiers. Le prix à payer est connu depuis le jour 1 : des modèles plus petits, donc moins capables, et une fenêtre de contexte réduite. Pour du code confidentiel, l'arbitrage penche nettement vers le local ; pour du prototypage non sensible, le cloud reste plus productif. La souveraineté numérique — dépendance aux éditeurs, pérennité des offres, localisation — prolonge cet arbitrage au niveau de l'organisation : c'est un des fils du débat du chapitre 3.</p>
+</div>
+
+<div id="tab-travailler-avec-un-modele-local-brancher-opencode-sur-ollama" class="tab-content">
+<h3>Pourquoi OpenCode pour cette formation</h3>
+<p>OpenCode est un harnais open source, agnostique en fournisseurs : il ne vend ni modèle ni abonnement, et se branche sur n'importe quel endpoint — API distantes comme serveur Ollama local. Il couvre tous les composants vus dans ce chapitre (commandes, skills, agents, MCP, permissions) et fonctionne en terminal (TUI), avec une architecture client/serveur. C'est le véhicule d'atelier idéal : configuration visible en clair, concepts transposables aux assistants propriétaires.</p>
+<h3>Prérequis issus du jour 1</h3>
+<ul>
+<li>Ollama installé et servi (natif ou Docker Compose), API joignable sur <code>http://localhost:11434</code> ;</li>
+<li>au moins un modèle tiré et vérifié (<code>ollama list</code>, <code>ollama ps</code>) ;</li>
+<li>un modèle configuré « développement assisté » : le Modelfile <code>revue-code</code> de l'atelier du jour 1, ou un modèle équivalent avec <code>temperature 0.2</code> et <code>num_ctx 16384</code>.</li>
+</ul>
+<h3>Configuration du fournisseur Ollama</h3>
+<p>OpenCode déclare les fournisseurs dans <code>opencode.json</code>. Ollama expose un endpoint compatible OpenAI (jour 1), donc la connexion passe par le paquet <code>@ai-sdk/openai-compatible</code> :</p>
+<div class="code-block"><pre><code class="language-json">{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;provider&quot;: {
+    &quot;ollama&quot;: {
+      &quot;npm&quot;: &quot;@ai-sdk/openai-compatible&quot;,
+      &quot;name&quot;: &quot;Ollama (local)&quot;,
+      &quot;options&quot;: {
+        &quot;baseURL&quot;: &quot;http://localhost:11434/v1&quot;
+      },
+      &quot;models&quot;: {
+        &quot;llama3.1:8b&quot;: {
+          &quot;name&quot;: &quot;Llama 3.1 8B (local)&quot;
+        },
+        &quot;revue-code&quot;: {
+          &quot;name&quot;: &quot;Revue de code (Modelfile jour 1)&quot;
+        }
+      }
+    }
+  }
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Chaque clé de <code>models</code> doit correspondre <strong>exactement</strong> au nom Ollama (<code>ollama list</code>). Le modèle se sélectionne ensuite dans l'interface sous la forme <code>ollama/llama3.1:8b</code>.</p>
+<div class="callout warn"><div class="callout-title">Appels d'outil qui échouent avec un modèle local</div><p>Le function calling d'un petit modèle local est fragile avec une fenêtre de contexte étroite : les définitions d'outils du harnais consomment une part importante de <code>num_ctx</code>. Si les appels d'outil échouent ou si l'assistant « oublie » ses outils, augmenter <code>num_ctx</code> côté Ollama (16k–32k) et vérifier la mémoire disponible (<code>ollama ps</code>). Choisir de préférence un modèle annoncé compatible outils (Llama 3.1+, Qwen, Mistral).</p></div>
+<h3>Adapter ses attentes à un modèle local</h3>
+<p>Un modèle local de 8B n'est pas un modèle de pointe distant. Les ajustements qui changent tout :</p>
+<ul>
+<li><strong>réduire le nombre d'outils actifs</strong> : désactiver les serveurs MCP superflus, chaque définition d'outil pèse sur le contexte et sur la capacité de choix du modèle ;</li>
+<li><strong>découper plus fin</strong> : des tours courts, une tâche par session, des instructions explicites — la zone intelligente d'un petit modèle arrive vite ;</li>
+<li><strong>fournir le contexte à la main</strong> : ouvrir les fichiers pertinents plutôt que laisser l'agent explorer largement ;</li>
+<li><strong>privilégier les modèles « instruct » récents</strong> et, pour le code, les familles reconnues (Llama, Qwen, DeepSeek-Coder selon disponibilité dans la bibliothèque Ollama) ;</li>
+<li><strong>garder le cloud pour l'exceptionnel</strong> : certains harnais permettent de changer de modèle en cours de session — modèle local au quotidien, modèle distant pour un débogage difficile, si la confidentialité le permet.</li>
+</ul>
+<h3>Vérification de bout en bout</h3>
+<p>Séquence de contrôle après configuration :</p>
+<div class="code-block"><pre><code class="language-bash"># 1. Le serveur Ollama répond
+curl http://localhost:11434/api/version
+
+# 2. Le modèle cible est présent et compatible outils
+ollama show llama3.1:8b | head -20
+
+# 3. OpenCode démarre et liste le fournisseur
+opencode models | grep ollama
+
+# 4. Dans une session OpenCode : poser une question simple,
+#    puis demander une lecture de fichier pour valider la boucle d'outils.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Le test décisif est le 4 : une question simple valide la chaîne modèle ↔ harnais ; une demande de lecture de fichier valide les appels d'outil via le modèle local. Si la réponse arrive mais que l'outil ne s'exécute jamais, le diagnostic porte sur le function calling du modèle (encart ci-dessus), pas sur l'installation.</p>
+</div>
+
+<div id="tab-les-cinq-cas-d-usage-en-pratique" class="tab-content">
+<h3>Brainstorming : explorer avant de s'engager</h3>
+<p>Le brainstorming est l'usage où le rapport valeur/coût est le plus élevé : une idée coûte une phrase. Méthode efficace en trois temps :</p>
+<ol>
+<li><strong>cadrer</strong> : donner le contexte réel (contraintes techniques, existant, non-négociables) plutôt qu'une question nue — « je dois stocker des sessions utilisateur, l'existant est en PostgreSQL, contrainte : pas de nouvelle infrastructure » ;</li>
+<li><strong>diverger</strong> : demander explicitement plusieurs options contrastées avec leurs compromis (« propose trois approches, avec pour chacune les avantages, les risques et le coût de mise en œuvre ») ;</li>
+<li><strong>converger</strong> : faire critiquer l'option préférée sans révéler sa préférence — formulation neutre pour éviter la sycophantie (le modèle complaisant qui approuve parce que le stagiaire semble sûr de lui).</li>
+</ol>
+<p>Avec un modèle local, ce troisième point est encore plus important : les petits modèles sont plus sensibles au cadrage du prompt. « Examine ce code » produit une analyse plus honnête que « ce code est-il bon ? ».</p>
+<h3>Documentation : générer juste, maintenir vrai</h3>
+<p>Deux pièges classiques de la documentation générée : la <strong>documentation inventée</strong> (l'assistant décrit un comportement qu'il suppose, pas celui qu'il a lu) et la <strong>documentation pléonastique</strong> (elle reformule le code sans rien ajouter). Les parades :</p>
+<ul>
+<li>faire <strong>lire le code réel</strong> avant de demander la documentation (fichier ouvert dans le contexte, pas deviné) ;</li>
+<li>demander explicitement <strong>ce que le code ne dit pas</strong> : pourquoi cette approche, quelles limites, quel contexte d'utilisation ;</li>
+<li>versionner la documentation générée et la <strong>revoir comme du code</strong> — une revue humaine reste la seule garantie de justesse.</li>
+</ul>
+<p>Sur un README de module : fournir la liste des fichiers, demander structure imposée (objet, installation, usage, limites), relire chaque affirmation factuelle.</p>
+<h3>Implémentation : spécifier, découper, vérifier</h3>
+<p>L'implémentation assistée échoue rarement sur le code, presque toujours sur le cadrage. La séquence qui fonctionne :</p>
+<ol>
+<li>une <strong>spécification courte mais complète</strong> : entrée/sortie, cas limites, contraintes, style attendu ;</li>
+<li>un <strong>découpage en étapes vérifiables</strong> — demander un plan d'abord, valider, puis faire implémenter étape par étape (un tour = une étape) ;</li>
+<li>une <strong>vérification systématique</strong> : tests exécutés, compilation, relecture du diff. Ne jamais intégrer du code non exécuté.</li>
+</ol>
+<p>Le chapitre 3 transforme cette séquence en flux outillé (spécification → TDD → commit → pull request).</p>
+<h3>Tests : le meilleur premier investissement</h3>
+<p>Générer des tests est la tâche idéale pour débuter avec un assistant : la valeur est immédiate, le risque faible (un mauvais test échoue ou se remarque à la revue), et le résultat est vérifiable par nature. Usages par ordre de rentabilité :</p>
+<ul>
+<li><strong>compléter les cas limites</strong> d'une suite existante : fournir la fonction et ses tests actuels, demander les cas manquants ;</li>
+<li><strong>écrire les tests d'une fonction avant implémentation</strong> (TDD — atelier du chapitre 3) ;</li>
+<li><strong>caractériser du code legacy</strong> : faire écrire les tests qui figent le comportement observé avant refactorisation.</li>
+</ul>
+<p>Vigilance : un test généré peut tester <strong>l'implémentation</strong> au lieu du <strong>comportement</strong> (il casse au premier refactor légitime), ou pire, asserter la sortie actuelle du code même quand elle est fausse. Relire chaque assertion en se demandant : « ce test échouerait-il si le code régressait ? ».</p>
+<h3>Revues : une deuxième paire d'yeux, pas un oracle</h3>
+<p>La revue automatisée complète la revue humaine, ne la remplace pas. Ce qu'elle attrape bien : violations de conventions, duplication, gestion d'erreurs manquante, risques de sécurité usuels (injections, secrets en dur). Ce qu'elle rate : la pertinence métier, l'architecture au-delà du diff, les implications d'exploitation.</p>
+<p>Configuration recommandée : une grille de revue explicite (via la commande <code>/revue</code> de l'atelier ou un sous-agent relecteur en lecture seule), appliquée au diff — jamais au dépôt entier, le contexte exploserait pour un signal dilué.</p>
+<div class="callout note"><div class="callout-title">Le point commun des cinq usages</div><p>Dans les cinq cas, la qualité de la sortie suit la qualité du contexte fourni et du découpage demandé. Ce ne sont pas cinq compétences différentes : c'est la même discipline — spécifier, charger le bon contexte, vérifier — appliquée à cinq intentions.</p></div>
+</div>
+
+<div id="tab-github-copilot-et-cursor-en-pratique" class="tab-content">
+<h3>GitHub Copilot dans l'IDE</h3>
+<p>Le programme officiel cite Copilot comme référence côté éditeur. Ses trois surfaces de travail :</p>
+<ul>
+<li>la <strong>complétion en ligne</strong> (ghost text) : suggérée pendant la frappe, acceptée au clavier — utile pour le code répétitif, les tests, le boilerplate ;</li>
+<li>le <strong>chat intégré</strong> : questions sur le code sélectionné, génération de fonctions, explication, corrections — avec le contexte des fichiers ouverts ;</li>
+<li>le <strong>mode agent</strong> : sur une tâche décrite en langage naturel, l'agent propose des modifications multi-fichiers, exécute des commandes et itère — avec validations à chaque étape sensible.</li>
+</ul>
+<p>Réflexes de configuration en entreprise : vérifier le mode de confidentialité du plan (Business/Enterprise : pas d'entraînement sur le code), activer le filtrage de similarité avec du code public si la politique l'exige, et restreindre les références aux suggestions longues recopiées de dépôts ouverts.</p>
+<h3>Cursor : l'IDE agentique</h3>
+<p>Cursor remplace l'IDE lui-même (fork de VS Code : extensions, raccourcis et thèmes sont conservés). Ce qui le distingue :</p>
+<ul>
+<li><strong>indexation du projet</strong> : le dépôt est indexé pour retrouver automatiquement les fichiers pertinents à chaque requête — le contexte est assemblé sans sélection manuelle ;</li>
+<li><strong>édition multi-fichiers</strong> : une instruction produit des modifications cohérentes sur plusieurs fichiers, présentées en diff acceptables individuellement ;</li>
+<li><strong>règles projet</strong> : l'équivalent d'AGENTS.md (fichiers de règles versionnés) pour les conventions permanentes ;</li>
+<li><strong>MCP</strong> : connexion aux serveurs d'outils externes comme dans OpenCode ;</li>
+<li><strong>choix du modèle</strong> : plusieurs modèles distants sélectionnables ; les versions récentes permettent de pointer vers un endpoint compatible OpenAI, donc vers Ollama en local — avec les mêmes réserves sur la fiabilité des appels d'outil qu'avec tout petit modèle local.</li>
+</ul>
+<div class="callout tip"><div class="callout-title">Un même bagage conceptuel, trois harnais</div><p>Prompt système, règles projet (AGENTS.md / rules), commandes, MCP, permissions, modes : les composants sont les mêmes partout, seuls les noms et les emplacements de configuration changent. Un développeur qui maîtrise les concepts du jour 2 change d'outil sans repartir de zéro — c'est l'objectif pédagogique de cette journée.</p></div>
+</div>
+
+<div id="tab-depannage-de-l-assistant-local" class="tab-content">
+<h3>Symptômes et correctifs</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptôme</th>
+<th>Cause probable</th>
+<th>Correctif</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Le fournisseur n'apparaît pas dans l'assistant</td>
+<td><code>baseURL</code> erronée ou Ollama arrêté</td>
+<td>Vérifier <code>curl http://localhost:11434/api/version</code> ; corriger <code>http://localhost:11434/v1</code></td>
+</tr>
+<tr>
+<td>« model not found »</td>
+<td>Nom de modèle différent entre <code>models</code> et <code>ollama list</code></td>
+<td>Aligner exactement la clé (tag inclus : <code>llama3.1:8b</code>)</td>
+</tr>
+<tr>
+<td>Réponse extrêmement lente</td>
+<td>Inférence CPU (VRAM insuffisante) ou <code>num_ctx</code> démesuré</td>
+<td><code>ollama ps</code> : viser 100 % GPU ; réduire <code>num_ctx</code> ou la taille du modèle</td>
+</tr>
+<tr>
+<td>Les outils ne s'exécutent jamais</td>
+<td>Function calling du modèle en échec (contexte trop étroit, modèle non outillé)</td>
+<td>Augmenter <code>num_ctx</code> (16k–32k) ; choisir un modèle compatible outils (Llama 3.1+, Qwen, Mistral)</td>
+</tr>
+<tr>
+<td>L'assistant « oublie » les consignes d'AGENTS.md</td>
+<td>Session trop longue, dégradation de l'attention</td>
+<td>Réinitialiser la session ; raccourcir AGENTS.md ; une tâche par session</td>
+</tr>
+<tr>
+<td>Erreurs d'authentification MCP distant</td>
+<td>Jeton absent ou expiré</td>
+<td>Vérifier la variable d'environnement référencée par <code>{env:VAR}</code></td>
+</tr>
+<tr>
+<td>Le conteneur OpenCode ne voit pas Ollama</td>
+<td>Réseau Docker distinct</td>
+<td>Même réseau Compose (nom DNS <code>ollama</code>) ou <code>http://host.docker.internal:11434</code></td>
+</tr>
+<tr>
+<td>Chaque session démarre avec des milliers de jetons « d'outils »</td>
+<td>Serveurs MCP trop nombreux activés</td>
+<td>Désactiver les serveurs inutiles (<code>"enabled": false</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout note"><div class="callout-title">La chaîne de diagnostic, dans l'ordre</div><ol>
+<li>Le serveur Ollama répond-il (<code>/api/version</code>) ? 2. Le modèle est-il chargé et sur GPU (<code>ollama ps</code>) ? 3. L'assistant liste-t-il le fournisseur (<code>opencode models</code>) ? 4. Une requête simple passe-t-elle ? 5. Un appel d'outil s'exécute-t-il ? Remonter la chaîne s'arrête au premier maillon cassé — dans 90 % des cas d'atelier, le coupable est le nom du modèle ou le <code>num_ctx</code>.</li>
+</ol></div>
+</div>
+
+<div id="tab-de-l-assistant-au-flux-de-developpement" class="tab-content">
+<h3>Ce que le jour 2 rend possible</h3>
+<p>À l'issue de cette journée, la boucle complète fonctionne en local : un harnais configuré (AGENTS.md, commandes, skills, sous-agents, MCP, permissions) dialogue avec un modèle servi par Ollama, lit et modifie le système de fichiers, exécute des commandes sous contrôle d'autorisations. Il manque une pièce pour en faire un outil d'équipe : l'inscription de ce travail dans un <strong>flux de développement maîtrisé</strong> — spécification, tests d'abord, commits, revue, intégration.</p>
+<p>C'est l'objet du chapitre 3 : transformer l'assistant « qui sait coder » en partenaire d'un flux Git outillé, avec des garde-fous automatisés à chaque étape. La configuration produite en atelier aujourd'hui (<code>.opencode/</code> versionné, permissions, relecteur en sous-agent) en est précisément la brique de base : le jour 3 ne change pas d'outil, il le met au travail dans un processus.</p>
+<h3>Les questions ouvertes pour le jour 3</h3>
+<ul>
+<li>comment formaliser une <strong>spécification</strong> exploitable par l'agent (template, niveau de détail) ?</li>
+<li>comment configurer un <strong>flux Git</strong> où l'agent commute, pousse et ouvre des pull requests sous conditions ?</li>
+<li>comment un <strong>flux TDD</strong> transforme la vérification — le point faible structurel de la génération — en garde-fou automatique ?</li>
+<li>quelles <strong>limites</strong> accepter : hallucinations, dépendance, éthique et propriété intellectuelle ?</li>
+</ul>
+</div>
+
+<div id="tab-atelier-armer-son-assistant-avec-ollama" class="tab-content">
+<p>L'atelier du jour 2 met en place, sur le dépôt de démonstration fourni par le formateur, une configuration d'assistant complète et versionnée. Chaque étape produit un fichier dans <code>.opencode/</code>, commité au fil de l'eau : à la fin, le dépôt embarque toute la configuration de l'équipe.</p>
+<h3>Étape 1 — Installer OpenCode et le brancher sur Ollama</h3>
+<p>Installer OpenCode selon la documentation officielle (opencode.ai), reprendre la configuration fournisseur de la section précédente dans <code>opencode.json</code> à la racine du projet, et valider la séquence de bout en bout. Critère de réussite : une réponse du modèle local dans la TUI, et une lecture de fichier exécutée via outil.</p>
+<h3>Étape 2 — Rédiger AGENTS.md</h3>
+<p>À partir du dépôt de démonstration, rédiger un AGENTS.md utile : commande de build exacte, commande de test, conventions de nommage, architecture en trois phrases, interdits. Le faire relire par l'assistant lui-même (« Que retiens-tu de ce projet après lecture d'AGENTS.md ? ») — la réponse révèle les trous du fichier. Structure minimale attendue :</p>
+<div class="code-block"><pre><code class="language-markdown"># AGENTS.md
+## Build et tests
+- `make build` — compilation du projet
+- `make test` — suite de tests complète
+## Conventions
+- Nommage : snake_case en Python, composants React en PascalCase
+- Toute fonction publique est typée et documentée
+## Interdits
+- Ne jamais committer de fichier `.env` ni de donnée réelle dans les fixtures
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<h3>Étape 3 — Créer deux commandes</h3>
+<ul>
+<li><code>.opencode/commands/test.md</code> : lancer la suite de tests, analyser les échecs, proposer des correctifs (agent <code>build</code>) ;</li>
+<li><code>.opencode/commands/revue.md</code> : appliquer la grille de revue de l'équipe (sécurité, performance, lisibilité) au diff Git courant.</li>
+</ul>
+<p>Les tester sur une modification volontairement médiocre du dépôt (duplication, nommage approximatif) et comparer la sortie de <code>/revue</code> avec et sans la grille.</p>
+<h3>Étape 4 — Créer un skill</h3>
+<p>Rédiger <code>.opencode/skills/conventions-commit/SKILL.md</code> : format de message de commit du projet (type, portée, sujet impératif, corps). La description doit contenir les mots-clés « commit », « message », « versionner ». Vérifier le déclenchement automatique en demandant « prépare un message de commit pour ces changements » — sans citer le skill.</p>
+<h3>Étape 5 — Déclarer un sous-agent relecteur</h3>
+<p>Ajouter l'agent <code>code-reviewer</code> de la section précédente (mode <code>subagent</code>, <code>edit: deny</code>) et déléguer la revue du diff de l'étape 3. Comparer avec la commande <code>/revue</code> : même modèle, contexte différent — la discussion porte sur ce que chaque approche coûte et rapporte.</p>
+<h3>Étape 6 — Configurer permissions et MCP</h3>
+<ul>
+<li>permissions globales : <code>edit: ask</code>, <code>bash</code> en <code>{ "git status": "allow", "rm *": "deny", "*": "ask" }</code> ;</li>
+<li>ajouter un serveur MCP local utile au projet de démonstration (par exemple un serveur de documentation) et observer l'impact sur le démarrage de session ;</li>
+<li>vérifier qu'une commande destructive (<code>rm</code>) est bien refusée sans demande, et qu'une édition déclenche la demande d'autorisation.</li>
+</ul>
+<div class="callout tip"><div class="callout-title">Validation de fin de journée</div><p>Chaque stagiaire dispose d'un assistant fonctionnel sur modèle local : AGENTS.md, deux commandes, un skill, un sous-agent et des permissions — le tout versionné dans <code>.opencode/</code> et AGENTS.md. Le chapitre 3 déroule un flux de développement complet (spécification → TDD → commit → pull request) sur cette configuration.</p></div>
+</div>
+
+<div id="tab-quiz" class="tab-content">
+<div id="quiz-container">
+<div class="quiz-question" id="q1">
+  <h4>Question 1 — Quel est le rôle principal du harnais dans un assistant IA ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(1,'a')">A) Exécuter le modèle plus rapidement sur le GPU</button>
+    <button class="quiz-option" onclick="answer(1,'b')">B) Assembler le contexte, exposer et exécuter les outils, et gérer les autorisations autour du modèle</button>
+    <button class="quiz-option" onclick="answer(1,'c')">C) Entraîner le modèle sur la base de code du projet</button>
+    <button class="quiz-option" onclick="answer(1,'d')">D) Remplacer le modèle quand il n'est pas disponible</button>
+  </div>
+  <div class="quiz-feedback" id="fb1"></div>
+</div>
+<div class="quiz-question" id="q2">
+  <h4>Question 2 — Que se passe-t-il réellement quand l'agent « appelle un outil » ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(2,'a')">A) Le modèle exécute lui-même la commande via son moteur d'inférence</button>
+    <button class="quiz-option" onclick="answer(2,'b')">B) Le modèle émet du texte structuré (nom + arguments) que le harnais interprète et exécute</button>
+    <button class="quiz-option" onclick="answer(2,'c')">C) Le harnais interroge une API de tools externe à chaque requête</button>
+    <button class="quiz-option" onclick="answer(2,'d')">D) Le modèle modifie directement le système de fichiers via ses paramètres</button>
+  </div>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+<div class="quiz-question" id="q3">
+  <h4>Question 3 — Comment se hiérarchisent session, tour et requête ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(3,'a')">A) Requête &gt; Tour &gt; Session</button>
+    <button class="quiz-option" onclick="answer(3,'b')">B) Tour &gt; Session &gt; Requête</button>
+    <button class="quiz-option" onclick="answer(3,'c')">C) Session &gt; Tour &gt; Requête</button>
+    <button class="quiz-option" onclick="answer(3,'d')">D) Les trois notions sont équivalentes</button>
+  </div>
+  <div class="quiz-feedback" id="fb3"></div>
+</div>
+<div class="quiz-question" id="q4">
+  <h4>Question 4 — Qu'est-ce qui distingue fondamentalement une commande d'un skill ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(4,'a')">A) La commande est déclenchée explicitement par l'utilisateur, le skill est chargé automatiquement selon la tâche</button>
+    <button class="quiz-option" onclick="answer(4,'b')">B) La commande fonctionne en local, le skill nécessite une API distante</button>
+    <button class="quiz-option" onclick="answer(4,'c')">C) La commande est en JSON, le skill obligatoirement en YAML</button>
+    <button class="quiz-option" onclick="answer(4,'d')">D) Aucune différence : ce sont deux noms du même mécanisme</button>
+  </div>
+  <div class="quiz-feedback" id="fb4"></div>
+</div>
+<div class="quiz-question" id="q5">
+  <h4>Question 5 — Dans un fichier SKILL.md, quel champ conditionne le déclenchement du skill par le modèle ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(5,'a')">A) name</button>
+    <button class="quiz-option" onclick="answer(5,'b')">B) description</button>
+    <button class="quiz-option" onclick="answer(5,'c')">C) model</button>
+    <button class="quiz-option" onclick="answer(5,'d')">D) permission</button>
+  </div>
+  <div class="quiz-feedback" id="fb5"></div>
+</div>
+<div class="quiz-question" id="q6">
+  <h4>Question 6 — Quel est le principal bénéfice d'un sous-agent par rapport à l'agent primaire ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(6,'a')">A) Il utilise un modèle gratuit</button>
+    <button class="quiz-option" onclick="answer(6,'b')">B) Il travaille dans sa propre fenêtre de contexte et ne rend qu'une synthèse</button>
+    <button class="quiz-option" onclick="answer(6,'c')">C) Il n'a pas besoin de permissions</button>
+    <button class="quiz-option" onclick="answer(6,'d')">D) Il répond plus vite car il ignore le prompt système</button>
+  </div>
+  <div class="quiz-feedback" id="fb6"></div>
+</div>
+<div class="quiz-question" id="q7">
+  <h4>Question 7 — Que résout le protocole MCP (Model Context Protocol) ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(7,'a')">A) La compression des modèles avant téléchargement</button>
+    <button class="quiz-option" onclick="answer(7,'b')">B) L'intégration d'outils externes : écrite une fois côté serveur, réutilisable par tout harnais compatible</button>
+    <button class="quiz-option" onclick="answer(7,'c')">C) Le chiffrement des échanges entre le harnais et le modèle</button>
+    <button class="quiz-option" onclick="answer(7,'d')">D) La facturation par jeton des assistants</button>
+  </div>
+  <div class="quiz-feedback" id="fb7"></div>
+</div>
+<div class="quiz-question" id="q8">
+  <h4>Question 8 — Quel est le coût caché principal d'un serveur MCP activé ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(8,'a')">A) Il ralentit le téléchargement des modèles</button>
+    <button class="quiz-option" onclick="answer(8,'b')">B) Les définitions de ses outils occupent la fenêtre de contexte dès le démarrage de session</button>
+    <button class="quiz-option" onclick="answer(8,'c')">C) Il désactive les outils intégrés du harnais</button>
+    <button class="quiz-option" onclick="answer(8,'d')">D) Il impose un abonnement supplémentaire</button>
+  </div>
+  <div class="quiz-feedback" id="fb8"></div>
+</div>
+<div class="quiz-question" id="q9">
+  <h4>Question 9 — Dans une configuration de permissions OpenCode <code>{ "git *": "allow", "rm *": "deny", "*": "ask" }</code>, quelle règle s'applique à la commande <code>rm -rf build</code> ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(9,'a')">A) allow, car la première règle correspondante gagne</button>
+    <button class="quiz-option" onclick="answer(9,'b')">B) deny, car la dernière règle correspondante dans l'ordre d'insertion gagne</button>
+    <button class="quiz-option" onclick="answer(9,'c')">C) ask, car le joker final prime toujours</button>
+    <button class="quiz-option" onclick="answer(9,'d')">D) La commande est exécutée sans évaluation des règles</button>
+  </div>
+  <div class="quiz-feedback" id="fb9"></div>
+</div>
+<div class="quiz-question" id="q10">
+  <h4>Question 10 — Quel est l'avantage décisif d'un bac à sable (sandbox) par rapport aux permissions seules ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(10,'a')">A) Il supprime le besoin de modèle local</button>
+    <button class="quiz-option" onclick="answer(10,'b')">B) Il contient le rayon d'action des exécutions au lieu d'exiger une validation humaine à chaque appel</button>
+    <button class="quiz-option" onclick="answer(10,'c')">C) Il empêche toute sortie réseau, y compris les pushes Git légitimes</button>
+    <button class="quiz-option" onclick="answer(10,'d')">D) Il accélère l'inférence en isolant le GPU</button>
+  </div>
+  <div class="quiz-feedback" id="fb10"></div>
+</div>
+<div class="quiz-question" id="q11">
+  <h4>Question 11 — Quelle configuration OpenCode branche l'assistant sur un Ollama local ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(11,'a')">A) Un provider avec npm @ai-sdk/openai-compatible et baseURL http://localhost:11434/v1</button>
+    <button class="quiz-option" onclick="answer(11,'b')">B) Un serveur MCP de type local pointant vers le binaire ollama</button>
+    <button class="quiz-option" onclick="answer(11,'c')">C) La variable d'environnement OPENCODE_OLLAMA=1</button>
+    <button class="quiz-option" onclick="answer(11,'d')">D) Un Modelfile copié dans .opencode/models/</button>
+  </div>
+  <div class="quiz-feedback" id="fb11"></div>
+</div>
+<div class="quiz-question" id="q12">
+  <h4>Question 12 — Les appels d'outil d'un modèle local échouent régulièrement dans l'assistant. Quel est le premier correctif à tenter ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(12,'a')">A) Réinstaller OpenCode</button>
+    <button class="quiz-option" onclick="answer(12,'b')">B) Augmenter num_ctx côté Ollama (16k–32k) et vérifier que le modèle est compatible outils</button>
+    <button class="quiz-option" onclick="answer(12,'c')">C) Passer temperature à 2.0</button>
+    <button class="quiz-option" onclick="answer(12,'d')">D) Désactiver AGENTS.md</button>
+  </div>
+  <div class="quiz-feedback" id="fb12"></div>
+</div>
+</div>
+<div class="quiz-score" id="quiz-score">
+  <div class="score-num" id="score-display">0 / 12</div>
+  <p id="score-msg"></p>
+  <button class="btn-restart" onclick="restartQuiz()">Recommencer</button>
+</div>
+</div>
+  </div>
+</div>
+
+<script>
+// ─── THEME ──────────────────────────────────────────────────────────────────
+(function () {
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dawan-theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  updateToggleLabel();
+})();
+
+function updateToggleLabel() {
+  const current = document.documentElement.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = current === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = current === 'dark' ? 'Sombre' : 'Clair';
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('dawan-theme', next);
+  updateToggleLabel();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.side-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  document.querySelector('.content').scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ─── COPY CODE ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.previousElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copié !'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+const answers = { 1:'b', 2:'b', 3:'c', 4:'a', 5:'b', 6:'b', 7:'b', 8:'b', 9:'b', 10:'b', 11:'a', 12:'b' };
+const feedbacks = {
+  1: { b: "Exact ! Le modèle seul ne fait que prédire des jetons ; tout le comportement agentique (outils, mémoire de session, autorisations) est fourni par le harnais.", wrong: "Non. La bonne réponse est B) Assembler le contexte, exposer et exécuter les outils, et gérer les autorisations autour du modèle — Le modèle seul ne fait que prédire des jetons ; tout le comportement agentique (outils, mémoire de session, autorisations) est fourni par le harnais." },
+  2: { b: "Exact ! L'appel d'outil est produit par prédiction de jetons comme le reste ; le modèle n'exécute jamais rien lui-même, et l'appel peut se tromper (chemin inexistant, option inventée).", wrong: "Non. La bonne réponse est B) Le modèle émet du texte structuré (nom + arguments) que le harnais interprète et exécute — L'appel d'outil est produit par prédiction de jetons comme le reste ; le modèle n'exécute jamais rien lui-même, et l'appel peut se tromper (chemin inexistant, option inventée)." },
+  3: { c: "Exact ! La session accumule l'historique ; un tour est un message utilisateur et tout ce qui s'ensuit ; un tour contient une ou plusieurs requêtes au modèle, une par résultat d'outil réinjecté.", wrong: "Non. La bonne réponse est C) Session &gt; Tour &gt; Requête — La session accumule l'historique ; un tour est un message utilisateur et tout ce qui s'ensuit ; un tour contient une ou plusieurs requêtes au modèle, une par résultat d'outil réinjecté." },
+  4: { a: "Exact ! La commande répond à « fais X maintenant » (/nom), le skill à « comment bien faire X dans ce projet », chargé via divulgation progressive quand la description correspond.", wrong: "Non. La bonne réponse est A) La commande est déclenchée explicitement par l'utilisateur, le skill est chargé automatiquement selon la tâche — La commande répond à « fais X maintenant » (/nom), le skill à « comment bien faire X dans ce projet », chargé via divulgation progressive quand la description correspond." },
+  5: { b: "Exact ! Le modèle ne voit en permanence que le nom et la description ; si la description ne contient pas les mots-clés de la situation, le corps du skill n'est jamais chargé.", wrong: "Non. La bonne réponse est B) description — Le modèle ne voit en permanence que le nom et la description ; si la description ne contient pas les mots-clés de la situation, le corps du skill n'est jamais chargé." },
+  6: { b: "Exact ! Une recherche ouverte sature la fenêtre du sous-agent, pas celle de l'agent principal ; la spécialisation (prompt + permissions réduites) fiabilise en plus le travail.", wrong: "Non. La bonne réponse est B) Il travaille dans sa propre fenêtre de contexte et ne rend qu'une synthèse — Une recherche ouverte sature la fenêtre du sous-agent, pas celle de l'agent principal ; la spécialisation (prompt + permissions réduites) fiabilise en plus le travail." },
+  7: { b: "Exact ! Sans MCP, chaque assistant devrait développer et maintenir sa propre intégration Linear, GitHub ou base de données.", wrong: "Non. La bonne réponse est B) L'intégration d'outils externes : écrite une fois côté serveur, réutilisable par tout harnais compatible — Sans MCP, chaque assistant devrait développer et maintenir sa propre intégration Linear, GitHub ou base de données." },
+  8: { b: "Exact ! Nom, description et schéma de chaque outil sont chargés d'emblée ; plusieurs serveurs généreux coûtent des milliers de jetons et du budget d'attention avant la première question.", wrong: "Non. La bonne réponse est B) Les définitions de ses outils occupent la fenêtre de contexte dès le démarrage de session — Nom, description et schéma de chaque outil sont chargés d'emblée ; plusieurs serveurs généreux coûtent des milliers de jetons et du budget d'attention avant la première question." },
+  9: { b: "Exact ! <code>rm -rf build</code> correspond à <code>rm *</code> (deny) et à <code>*</code> (ask) ; l'ordre d'insertion départage : les règles larges d'abord, les exceptions fines ensuite.", wrong: "Non. La bonne réponse est B) deny, car la dernière règle correspondante dans l'ordre d'insertion gagne — <code>rm -rf build</code> correspond à <code>rm *</code> (deny) et à <code>*</code> (ask) ; l'ordre d'insertion départage : les règles larges d'abord, les exceptions fines ensuite." },
+  10: { b: "Exact ! Les permissions demandent une décision avant l'action (interruptions), le bac à sable limite ce que l'action peut atteindre (infrastructure) ; aucun des deux ne bloque ce qui sort légitimement (push Git, API avec identifiants montés).", wrong: "Non. La bonne réponse est B) Il contient le rayon d'action des exécutions au lieu d'exiger une validation humaine à chaque appel — Les permissions demandent une décision avant l'action (interruptions), le bac à sable limite ce que l'action peut atteindre (infrastructure) ; aucun des deux ne bloque ce qui sort légitimement (push Git, API avec identifiants montés)." },
+  11: { a: "Exact ! Ollama expose un endpoint compatible OpenAI ; OpenCode s'y connecte via le paquet openai-compatible, chaque clé de models devant correspondre exactement au nom ollama list.", wrong: "Non. La bonne réponse est A) Un provider avec npm @ai-sdk/openai-compatible et baseURL http://localhost:11434/v1 — Ollama expose un endpoint compatible OpenAI ; OpenCode s'y connecte via le paquet openai-compatible, chaque clé de models devant correspondre exactement au nom ollama list." },
+  12: { b: "Exact ! Les définitions d'outils du harnais consomment la fenêtre ; un contexte trop étroit casse le function calling des petits modèles locaux. Llama 3.1+, Qwen et Mistral sont entraînés pour les outils.", wrong: "Non. La bonne réponse est B) Augmenter num_ctx côté Ollama (16k–32k) et vérifier que le modèle est compatible outils — Les définitions d'outils du harnais consomment la fenêtre ; un contexte trop étroit casse le function calling des petits modèles locaux. Llama 3.1+, Qwen et Mistral sont entraînés pour les outils." }
+};
+const QUIZ_TOTAL = 12;
+let score = 0;
+let answered = {};
+
+function answer(qNum, choice) {
+  if (answered[qNum]) return;
+  answered[qNum] = true;
+  score += (choice === answers[qNum]) ? 1 : 0;
+  const qEl = document.getElementById('q' + qNum);
+  qEl.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = true;
+    const ltr = btn.textContent.trim()[0].toLowerCase();
+    if (ltr === answers[qNum]) btn.classList.add('correct');
+    else if (ltr === choice) btn.classList.add('wrong');
+  });
+  const fb = feedbacks[qNum];
+  document.getElementById('fb' + qNum).textContent = (choice === answers[qNum]) ? fb[answers[qNum]] : fb.wrong;
+  if (Object.keys(answered).length === QUIZ_TOTAL) showScore();
+}
+
+function showScore() {
+  const el = document.getElementById('quiz-score');
+  el.style.display = 'block';
+  document.getElementById('score-display').textContent = score + ' / ' + QUIZ_TOTAL;
+  const ratio = score / QUIZ_TOTAL;
+  let msg;
+  if (ratio === 1) msg = 'Parfait ! Toutes les réponses sont correctes.';
+  else if (ratio >= .8) msg = 'Très bien ! Vous maîtrisez l\'essentiel.';
+  else if (ratio >= .6) msg = 'Pas mal ! Relisez les points manqués.';
+  else if (ratio >= .4) msg = 'Quelques notions à revoir.';
+  else msg = 'Revoyez le cours avant de continuer.';
+  document.getElementById('score-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  score = 0; answered = {};
+  document.getElementById('quiz-score').style.display = 'none';
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('correct','wrong');
+  });
+  document.querySelectorAll('.quiz-feedback').forEach(fb => fb.textContent = '');
+}
+</script>
+</body>
+</html>

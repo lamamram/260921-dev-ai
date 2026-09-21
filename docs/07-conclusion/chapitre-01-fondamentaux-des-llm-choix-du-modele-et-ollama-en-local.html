@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Support interactif de formation Ollama et IA générative pour le développement : 01 — Fondamentaux des LLM, choix du modèle et Ollama en local">
+<title>01 — Fondamentaux des LLM, choix du modèle et Ollama en local</title>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128; --border: #30363d;
+  --primary: #f0883e; --primary2: #ffa657;
+  --success: #3fb950; --warning: #d29922; --danger: #f85149;
+  --text: #e6edf3; --text-muted: #8b949e; --code-bg: #010409; --radius: 10px;
+  --topbar-h: 3.25rem;
+}
+:root[data-theme="light"] {
+  --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+  --primary: #bc4c00; --primary2: #953800;
+  --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+  --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #ffffff; --surface: #f6f8fa; --surface2: #eaeef2; --border: #d0d7de;
+    --primary: #bc4c00; --primary2: #953800;
+    --success: #1a7f37; --warning: #9a6700; --danger: #cf222e;
+    --text: #1f2328; --text-muted: #656d76; --code-bg: #f6f8fa;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 15px; line-height: 1.7; transition: background .2s, color .2s; }
+
+/* TOPBAR — fixe, ne bouge jamais au scroll */
+.topbar {
+  position: sticky; top: 0; z-index: 200; height: var(--topbar-h);
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .9rem; padding: 0 1rem;
+}
+.topbar .badge {
+  flex: 0 0 auto; background: var(--primary); color: #0d1117;
+  font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 20px; white-space: nowrap;
+}
+.topbar a.chapter-title {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: baseline; gap: .5rem;
+  text-decoration: none; color: var(--text); font-weight: 700; font-size: .92rem;
+  overflow: hidden;
+}
+.topbar a.chapter-title:hover { color: var(--primary); }
+.topbar a.chapter-title .num { color: var(--primary); flex: 0 0 auto; }
+.topbar a.chapter-title .txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-links { flex: 0 0 auto; display: flex; align-items: center; gap: .5rem; }
+.topbar-link {
+  white-space: nowrap; padding: .4rem .8rem; border: 1px solid var(--border); border-radius: 20px;
+  font-size: .8rem; font-weight: 600; color: var(--text-muted); text-decoration: none; transition: all .2s;
+}
+.topbar-link:hover { color: var(--primary); border-color: var(--primary); }
+.theme-toggle {
+  flex: 0 0 auto; background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+  padding: .4rem .7rem; border-radius: 20px; font-size: .8rem; cursor: pointer;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.theme-toggle:hover { border-color: var(--primary); }
+
+/* LAYOUT — sidebar gauche + contenu */
+.layout { display: flex; align-items: flex-start; }
+.sidebar {
+  flex: 0 0 280px; width: 280px;
+  position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; border-right: 1px solid var(--border); background: var(--surface);
+  padding: 1.25rem 1rem 2rem;
+}
+.objectifs {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .8rem 1rem; margin-bottom: 1.25rem;
+}
+.objectifs-label { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); }
+.objectifs ul { margin: .4rem 0 0 1.1rem; }
+.objectifs li { font-size: .82rem; color: var(--text-muted); margin-bottom: .3rem; line-height: 1.4; }
+.side-nav { display: flex; flex-direction: column; gap: .1rem; }
+.side-nav button {
+  text-align: left; background: none; border: none; border-left: 3px solid transparent;
+  color: var(--text-muted); padding: .55rem .7rem; font-size: .87rem; font-weight: 500;
+  cursor: pointer; border-radius: 0 6px 6px 0; transition: all .15s;
+}
+.side-nav button:hover { color: var(--text); background: var(--surface2); }
+.side-nav button.active { color: var(--primary); border-left-color: var(--primary); background: var(--surface2); font-weight: 600; }
+.side-nav-sep { height: 1px; background: var(--border); margin: .6rem 0; }
+
+.content { flex: 1 1 auto; min-width: 0; }
+.tab-content { display: none; padding: 2rem 2.5rem 4rem; max-width: 1100px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+/* SECTIONS */
+h2 { font-size: 1.25rem; color: var(--primary2); margin: 1.8rem 0 .8rem; border-left: 3px solid var(--primary); padding-left: .75rem; }
+h3 { font-size: 1.05rem; color: var(--text); margin: 1.4rem 0 .6rem; }
+p { margin-bottom: .9rem; }
+ul, ol { padding-left: 1.4rem; margin-bottom: .9rem; }
+li { margin-bottom: .35rem; }
+
+/* RESSOURCES — liste sous forme de cartes plutôt que de puces */
+#tab-ressources ul { list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: .5rem; }
+#tab-ressources li {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: .75rem 1rem; margin-bottom: 0;
+}
+#tab-ressources li a { color: var(--primary2); font-weight: 600; text-decoration: none; }
+#tab-ressources li a:hover { text-decoration: underline; }
+
+/* AIDE — divulgation progressive pas-à-pas */
+details.aide { margin-top: 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+details.aide summary {
+  cursor: pointer; padding: .8rem 1.1rem; font-weight: 600; color: var(--primary);
+  list-style: none; display: flex; align-items: center; gap: .5rem;
+}
+details.aide summary::-webkit-details-marker { display: none; }
+details.aide summary::before { content: "▶"; font-size: .7rem; transition: transform .15s; }
+details.aide[open] summary::before { transform: rotate(90deg); }
+details.aide .aide-body { padding: 0 1.1rem 1.1rem; border-top: 1px solid var(--border); margin-top: .2rem; padding-top: 1rem; }
+img { max-width: 100%; height: auto; display: block; margin: 1rem auto; }
+
+/* EXERCICE — un bloc par atelier, avec son aide pas-à-pas attachée juste en dessous */
+.exercice { padding: 1.3rem 0; border-top: 1px solid var(--border); }
+.exercice:first-of-type { border-top: none; padding-top: 0; }
+.exercice h3 { margin: 0 0 .8rem; color: var(--primary2); }
+
+/* CALLOUTS */
+.callout { border-radius: var(--radius); padding: .9rem 1.1rem; margin: 1.2rem 0; border-left: 4px solid; background: var(--surface2); }
+.callout.note   { border-color: var(--primary); }
+.callout.tip    { border-color: var(--success); }
+.callout.warn   { border-color: var(--warning); }
+.callout.danger { border-color: var(--danger); }
+.callout p:last-child { margin-bottom: 0; }
+.callout-title { font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .07em; margin-bottom: .4rem; }
+.callout.note   .callout-title { color: var(--primary); }
+.callout.tip    .callout-title { color: var(--success); }
+.callout.warn   .callout-title { color: var(--warning); }
+.callout.danger .callout-title { color: var(--danger); }
+
+/* TABLES */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th { background: var(--surface2); color: var(--primary2); text-align: left; padding: .6rem .9rem; font-weight: 600; border: 1px solid var(--border); }
+td { padding: .55rem .9rem; border: 1px solid var(--border); vertical-align: top; }
+tr:hover td { background: var(--surface2); }
+
+/* CODE */
+.code-block { position: relative; margin: 1rem 0; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1rem 1rem 1.2rem; overflow-x: auto; }
+code { font-family: 'Consolas', 'Cascadia Code', monospace; font-size: .88rem; color: var(--primary2); }
+p code, li code, td code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: .05rem .35rem; }
+.copy-btn {
+  position: absolute; top: .5rem; right: .5rem;
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+  padding: .25rem .6rem; font-size: .75rem; border-radius: 5px; cursor: pointer; transition: all .2s;
+}
+.copy-btn:hover { background: var(--primary); color: #0d1117; }
+.copy-btn.copied { background: var(--success); color: #0d1117; }
+
+/* QUIZ */
+.quiz-question { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1.2rem; }
+.quiz-question h4 { color: var(--primary2); margin-bottom: .9rem; font-size: .98rem; }
+.quiz-options { display: flex; flex-direction: column; gap: .5rem; }
+.quiz-option {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: .6rem .9rem; cursor: pointer;
+  font-size: .9rem; transition: all .2s; text-align: left; color: var(--text);
+}
+.quiz-option:hover:not(:disabled) { border-color: var(--primary); }
+.quiz-option.correct { border-color: var(--success); color: var(--success); }
+.quiz-option.wrong   { border-color: var(--danger);  color: var(--danger);  }
+.quiz-option:disabled { cursor: default; }
+.quiz-feedback { margin-top: .6rem; font-size: .87rem; color: var(--text-muted); font-style: italic; }
+.quiz-score {
+  background: var(--surface2); border: 1px solid var(--primary);
+  border-radius: var(--radius); padding: 1.5rem; text-align: center; margin-top: 1.5rem; display: none;
+}
+.quiz-score .score-num { font-size: 2.5rem; font-weight: 700; color: var(--primary); }
+.quiz-score p { color: var(--text-muted); margin-top: .4rem; }
+.btn-restart { background: var(--primary); color: #0d1117; border: none; padding: .6rem 1.4rem; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 1rem; font-size: .9rem; }
+.btn-restart:hover { background: var(--primary2); }
+
+/* RESPONSIVE — sidebar devient une barre horizontale sous 900px */
+@media (max-width: 900px) {
+  .layout { flex-direction: column; }
+  .sidebar {
+    position: static; width: 100%; height: auto; max-height: 40vh;
+    border-right: none; border-bottom: 1px solid var(--border);
+  }
+  .side-nav { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; gap: .3rem; }
+  .side-nav button { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; border-radius: 6px 6px 0 0; }
+  .side-nav button.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+  .side-nav-sep { display: none; }
+  .tab-content { padding: 1.5rem 1.2rem 3rem; }
+  .topbar a.chapter-title { font-size: .82rem; }
+}
+</style>
+<link rel="stylesheet" href="assets/course-common.css">
+<script src="assets/course-common.js" defer></script>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">Ollama et IA générative pour le développement</span>
+  <a class="chapter-title" href="index.html" title="Retour à l'accueil de la formation">
+    <span class="num">01</span><span class="txt">Fondamentaux des LLM, choix du modèle et Ollama en local</span>
+  </a>
+  <div class="topbar-links">
+    <a href="annexes.html" class="topbar-link">Annexes ↗</a>
+    <a class="topbar-link" href="index.html">Sommaire</a>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Basculer entre thème clair et sombre">
+      <span id="theme-icon">🌙</span> <span id="theme-label">Sombre</span>
+    </button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="objectifs"><span class="objectifs-label">Objectifs</span><ul><li>Distinguer IA, machine learning, deep learning, LLM et agent, et employer le vocabulaire précis</li><li>Dimensionner un modèle selon la mémoire disponible (paramètres, quantization, fenêtre de contexte, cache KV)</li><li>Installer Ollama (Windows, macOS, Linux, Docker Compose) et gérer le cycle de vie des modèles</li><li>Interagir avec un modèle local via le CLI et l&#x27;API HTTP, dont l&#x27;endpoint compatible OpenAI</li></ul></div>
+    <nav class="side-nav" id="main-nav">
+      <button class="active" onclick="showTab('introduction-aux-ia-generatives')">Introduction aux IA génératives</button>
+  <button class="" onclick="showTab('cas-d-usage-concrets-en-entreprise')">Cas d&#x27;usage concrets en entreprise</button>
+  <button class="" onclick="showTab('anatomie-d-un-llm-jetons-parametres-inference')">Anatomie d&#x27;un LLM : jetons, paramètres, inférence</button>
+  <button class="" onclick="showTab('choisir-un-modele-parametres-quantization-et-memoire')">Choisir un modèle : paramètres, quantization et mémoire</button>
+  <button class="" onclick="showTab('fenetre-de-contexte-et-cache-kv')">Fenêtre de contexte et cache KV</button>
+  <button class="" onclick="showTab('moteurs-d-inference-et-formats-de-modeles')">Moteurs d&#x27;inférence et formats de modèles</button>
+  <button class="" onclick="showTab('ollama-presentation-et-architecture')">Ollama : présentation et architecture</button>
+  <button class="" onclick="showTab('gerer-les-modeles-pull-run-list-show-ps-rm')">Gérer les modèles : pull, run, list, show, ps, rm</button>
+  <button class="" onclick="showTab('interagir-via-le-cli-et-l-api-http')">Interagir via le CLI et l&#x27;API HTTP</button>
+  <button class="" onclick="showTab('parametrer-l-execution-d-un-modele')">Paramétrer l&#x27;exécution d&#x27;un modèle</button>
+  <button class="" onclick="showTab('atelier-llama-3-en-local-de-l-installation-a-l-api')">Atelier : Llama 3 en local, de l&#x27;installation à l&#x27;API</button>
+  <button class="" onclick="showTab('quiz')">Quiz</button>
+    </nav>
+  </aside>
+  <div class="content">
+    <div id="tab-introduction-aux-ia-generatives" class="tab-content active">
+<p>Le programme officiel de la formation (référence Dawan INT102521-F) place cette introduction en ouverture du jour 1 : notions centrales (IA, LLM, GPT, agent), objectifs de la formation et cas d'usage concrets en entreprise. Les sections qui suivent reprennent cet ordre.</p>
+<h3>Une étiquette mouvante, pas une technologie</h3>
+<p>« IA » ne désigne pas un objet technique fixe. Le terme décrit ce que les ordinateurs parviennent nouvellement à faire de manière impressionnante — et il glisse à chaque progrès. C'est l'effet IA : dès qu'une technique fonctionne de façon fiable, elle est renommée (« ce n'est que des statistiques ») et l'étiquette « IA » se déplace vers le prochain problème non résolu.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Époque</th>
+<th>Ce que « IA » signifiait</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Années 1950</td>
+<td>Raisonnement symbolique : démonstrateurs de théorèmes, programmes de dames</td>
+</tr>
+<tr>
+<td>Années 1960-70</td>
+<td>Programmes fondés sur des règles : ELIZA, SHRDLU</td>
+</tr>
+<tr>
+<td>Années 1980</td>
+<td>Systèmes experts : des milliers de règles si-alors écrites à la main</td>
+</tr>
+<tr>
+<td>Années 1990</td>
+<td>Recherche dans un arbre de jeu : Deep Blue bat Kasparov (1997)</td>
+</tr>
+<tr>
+<td>Années 2000</td>
+<td>Apprentissage statistique : filtres antispam, recommandation — dit « machine learning »</td>
+</tr>
+<tr>
+<td>Années 2010</td>
+<td>Apprentissage profond : reconnaissance d'images (AlexNet, 2012), AlphaGo (2016)</td>
+</tr>
+<tr>
+<td>Années 2020</td>
+<td>Grands modèles de langage : ChatGPT (2022) fait d'« IA » le synonyme de chatbot</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout note"><div class="callout-title">Pourquoi cette précision compte</div><p>Une affirmation comme « l'IA ne peut pas raisonner » porte un horodatage caché : parle-t-on des systèmes experts, des classifieurs des années 2010 ou du LLM du mois dernier ? Chaque référence conduit à une conclusion différente. Quand une discussion technique s'enlise, remplacez « IA » par le terme précis : le modèle, le harnais, l'agent, le contexte fourni.</p></div>
+<h3>La chaîne de poupées russes : IA, ML, DL, LLM</h3>
+<p>Le schéma suivant situe les uns par rapport aux autres les concepts manipulés dans cette formation : l'intelligence artificielle englobe l'apprentissage automatique, qui englobe l'apprentissage profond, dans lequel sont nés les grands modèles de langage basés sur l'architecture Transformer.</p>
+<p><img alt="Imbrication IA, machine learning, deep learning et LLM" src="../08-images/ch1-imbrication-ia-ml-dl-llm.svg" /></p>
+<p>Chaque cadre restreint le précédent. Le point pratique pour un développeur : les LLM du cadre central sont des artefacts concrets — des fichiers de poids que l'on télécharge, que l'on charge en mémoire et que l'on interroge. C'est exactement ce que fait Ollama, mentionné en bas du schéma : un exécuteur local de ces modèles, qui les transforme en service interrogeable par les assistants de développement vus au chapitre 2.</p>
+<h3>Le vocabulaire minimal de la formation</h3>
+<ul>
+<li><strong>Transformer</strong> : architecture de réseau de neurones introduite en 2017 (« Attention is all you need », Vaswani et al.), fondée sur le mécanisme d'attention. C'est l'algorithme de deep learning communément utilisé par les LLM.</li>
+<li><strong>GPT</strong> (Generative Pre-trained Transformer) : famille de modèles fondée sur cette architecture ; le sigle est passé dans le langage courant.</li>
+<li><strong>LLM</strong> (Large Language Model, grand modèle de langage) : modèle basé sur l'architecture Transformer, entraîné sur un corpus massif pour générer du texte cohérent et contextuellement pertinent.</li>
+<li><strong>Llama</strong> : famille de LLM open source créée par Meta AI — la famille phare exécutée en local via Ollama.</li>
+<li><strong>Ollama</strong> : plateforme pour télécharger, exécuter et servir des LLM en local, via un CLI et une API HTTP.</li>
+<li><strong>ChatGPT</strong> : produit grand public = un client de chat + un LLM servi par OpenAI. À ne pas confondre avec le modèle lui-même.</li>
+<li><strong>Harnais</strong> (harness) : le logiciel qui entoure un modèle pour le rendre utile — outils, prompt système, gestion du contexte, autorisations. Un assistant de développement est un harnais ; le chapitre 2 lui est consacré.</li>
+<li><strong>Agent</strong> : un modèle placé dans un harnais, avec des outils et une fenêtre de contexte, qui échange des tours avec un utilisateur. C'est l'entité à laquelle on délègue une tâche.</li>
+</ul>
+<div class="callout warn"><div class="callout-title">« Le modèle » ne fait rien d'autre que prédire du texte</div><p>Un modèle seul ne lit pas de fichiers, n'exécute pas de commandes, ne parcourt pas le Web et ne se souvient pas d'hier. Tout ce qui ressemble à du travail d'agent — choisir des outils, lire des résultats, boucler jusqu'à la fin d'une tâche — est réalisé par le harnais qui orchestre de nombreuses prédictions successives. Attribuer un comportement à « l'IA » sans distinguer modèle et harnais est la première source de diagnostics erronés.</p></div>
+<h3>Système expert, machine learning, deep learning : la rupture</h3>
+<p>Les trois générations se distinguent par l'origine des règles :</p>
+<ul>
+<li><strong>Système expert</strong> (années 1980) : les règles sont <strong>écrites à la main</strong> par des ingénieurs de la connaissance. Fragile, coûteux à maintenir, incapable d'apprendre.</li>
+<li><strong>Machine learning</strong> : les règles sont <strong>apprises</strong> à partir de données d'exemple — le programme ajuste ses paramètres pour minimiser l'erreur de prédiction.</li>
+<li><strong>Deep learning</strong> : l'apprentissage passe par des <strong>réseaux de neurones à plusieurs couches</strong>, où chaque couche extrait des représentations de plus en plus abstraites. Les LLM en sont l'application au langage.</li>
+</ul>
+</div>
+
+<div id="tab-cas-d-usage-concrets-en-entreprise" class="tab-content">
+<h3>Pourquoi exécuter un modèle en local ?</h3>
+<p>Avant même de parler d'outils, identifions ce que le local apporte par rapport aux API distantes (OpenAI, Anthropic, Google) :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Critère</th>
+<th>API distante</th>
+<th>Modèle local (Ollama)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Confidentialité des données</td>
+<td>Le code et les prompts quittent la machine</td>
+<td>Aucune donnée ne sort du poste ou du serveur interne</td>
+</tr>
+<tr>
+<td>Coût d'usage</td>
+<td>Facturation par jeton, à chaque requête</td>
+<td>Coût matériel unique ; l'inférence ne se facture pas</td>
+</tr>
+<tr>
+<td>Disponibilité</td>
+<td>Dépend du réseau et du fournisseur</td>
+<td>Fonctionne hors ligne, dans un train ou sur un site isolé</td>
+</tr>
+<tr>
+<td>Capacité des modèles</td>
+<td>Modèles de pointe (centaines de milliards de paramètres)</td>
+<td>Limitée par la RAM/VRAM de la machine</td>
+</tr>
+<tr>
+<td>Latence réseau</td>
+<td>Aller-retour Internet à chaque requête</td>
+<td>Latence réseau nulle</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le compromis est clair : <strong>capacité contre contrôle</strong>. Les modèles qui tiennent sur un poste de travail sont bien plus petits que les modèles de pointe distants, mais aucune donnée ne quitte la machine et aucune facturation par jeton ne s'applique.</p>
+<div class="callout note"><div class="callout-title">Analogie du véhicule d'atelier</div><p>L'API distante est un taxi : toujours disponible, conduit par quelqu'un d'autre, payé à la course, et les bagages (les données) voyagent avec. Le modèle local est un utilitaire d'entreprise : il dort dans le garage, moins puissant qu'un avion, mais on y charge ce que l'on veut sans que cela regarde personne.</p></div>
+<h3>Cas d'usage rencontrés en entreprise</h3>
+<ul>
+<li><strong>Assistance au développement sur code confidentiel</strong> : un éditeur ou un harnais branché sur Ollama complète et refactorise du code qui ne doit pas quitter le système d'information (défense, santé, banque).</li>
+<li><strong>Pré-traitement de documents internes</strong> : extraction d'informations, résumés, classification de tickets — en traitement par lots, la nuit, sur un serveur interne.</li>
+<li><strong>Assistant métier hors ligne</strong> : support pour des techniciens terrain sans connectivité garantie.</li>
+<li><strong>Prototypage sans budget API</strong> : valider une idée d'agent ou de RAG avant d'engager des coûts par jeton.</li>
+<li><strong>Poste de développeur</strong> : brainstorming, génération de tests, explication de code, revues — le fil rouge des chapitres 2 et 3.</li>
+</ul>
+<h3>Objectifs de la formation</h3>
+<p>Au terme des trois jours, le stagiaire est capable de :</p>
+<ol>
+<li>comprendre le fonctionnement des modèles LLM open source comme Llama ;</li>
+<li>utiliser Ollama pour exécuter des modèles localement ;</li>
+<li>exploiter efficacement les assistants IA (harnais) dans son environnement de développement ;</li>
+<li>naviguer et coder avec assistance dans un IDE agentique ;</li>
+<li>identifier les cas d'usage pertinents pour chaque outil et les combiner dans son flux de travail.</li>
+</ol>
+</div>
+
+<div id="tab-anatomie-d-un-llm-jetons-parametres-inference" class="tab-content">
+<h3>Le jeton (token) : l'unité atomique</h3>
+<p>Le modèle ne lit ni caractères ni mots : il lit des <strong>jetons</strong> (tokens). Un tokenizer doté d'un vocabulaire fixe de dizaines de milliers de fragments découpe toute entrée en séquence de jetons ; la sortie est générée un jeton à la fois.</p>
+<p>Ordre de grandeur : un jeton ≈ les trois quarts d'un mot anglais ; 1 000 jetons ≈ 750 mots. Le code est moins prévisible : les mots-clés courants (<code>function</code>) se tokenisent en un seul jeton, tandis que les identifiants inhabituels, les hash et les blobs base64 se divisent en plusieurs jetons par « mot ». Un petit fichier rempli de chaînes inhabituelles peut donc occuper une part surprenante de la fenêtre de contexte.</p>
+<p>Tout se compte en jetons : la taille de la fenêtre de contexte, le coût (chez un fournisseur distant), la latence et la vitesse de génération (jetons par seconde).</p>
+<h3>Les paramètres : le savoir figé du modèle</h3>
+<p>Un <strong>paramètre</strong> (ou <strong>poids</strong>) est un nombre réel appris pendant l'entraînement — le coefficient d'une matrice du réseau. La « taille » d'un modèle s'exprime en milliards de paramètres : 7B, 13B, 70B, 405B…</p>
+<p>Deux propriétés essentielles :</p>
+<ul>
+<li>tout ce que le modèle « sait » réside dans ces nombres ; il n'existe ni base de données de faits ni table de recherche à l'intérieur du modèle ;</li>
+<li>les paramètres sont <strong>figés après l'entraînement</strong>. Rien de ce qui se passe pendant une session ne les modifie : ni correction, ni base de code montrée, ni erreur dont le modèle tirerait une leçon.</li>
+</ul>
+<p>C'est pourquoi le modèle est dit <strong>sans état</strong> (stateless) : la continuité doit venir de l'extérieur — la fenêtre de contexte renvoyée à chaque requête, ou un système de mémoire géré par le harnais (chapitre 2).</p>
+<h3>Entraînement contre inférence</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Moment</th>
+<th>Ce qu'elle fait</th>
+<th>Paramètres</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Entraînement</td>
+<td>Une fois, avant publication</td>
+<td>Produit les paramètres à partir d'un corpus massif</td>
+<td>En cours d'écriture</td>
+</tr>
+<tr>
+<td>Inférence</td>
+<td>À chaque requête</td>
+<td>Exécute les paramètres figés sur le contexte fourni</td>
+<td>Lecture seule</td>
+</tr>
+</tbody>
+</table></div>
+<p>L'entraînement est une répétition à très grande échelle : on montre un passage de texte, le modèle prédit le jeton suivant, on rapproche les paramètres de la bonne réponse, et l'on recommence sur des milliers de milliards de jetons. Ce processus coûteux est réalisé une fois par le créateur du modèle (Meta pour Llama…). Ce que fait le développeur au quotidien, c'est de l'<strong>inférence</strong> : exécuter le modèle entraîné — et c'est précisément le rôle d'Ollama.</p>
+<p>Deux conséquences pratiques : le modèle a une <strong>date limite des connaissances</strong> (knowledge cutoff) — il n'a pas vu la version de bibliothèque publiée le mois dernier ; et on ne peut pas « lui enseigner » une API interne — la solution est de placer la documentation dans le <strong>contexte</strong>, la seule entrée contrôlable.</p>
+<h3>La prédiction du jeton suivant</h3>
+<p>Le modèle ne fait qu'une chose : à partir du contexte, calculer une distribution de probabilité sur les jetons possibles, en <strong>échantillonner</strong> un, l'ajouter au contexte, recommencer. Toute sortie — une phrase, un appel d'outil, un fichier de mille lignes — est construite ainsi, un jeton à la fois.</p>
+<p>Ce mécanisme explique trois comportements déterminants :</p>
+<ol>
+<li><strong>Le non-déterminisme</strong> : l'échantillonnage comporte une part de hasard volontaire — toujours choisir le jeton le plus probable produirait un texte répétitif et de moins bonne qualité. Le même prompt peut donner deux réponses différentes ; réessayer est une stratégie légitime.</li>
+<li><strong>Les hallucinations</strong> : le modèle ne vérifie jamais qu'un jeton est <em>vrai</em> avant de l'émettre, seulement qu'il est <em>probable</em> (détaillé au chapitre 3).</li>
+<li><strong>La vitesse plafond d'un agent</strong> : les jetons de sortie sont produits strictement un par un ; la génération impose sa cadence à tout le flux de travail.</li>
+</ol>
+</div>
+
+<div id="tab-choisir-un-modele-parametres-quantization-et-memoire" class="tab-content">
+<h3>Le premier repère : la mémoire disponible</h3>
+<p>Choisir un modèle, c'est faire tenir trois choses dans une enveloppe mémoire (RAM ou VRAM) :</p>
+<ol>
+<li>les <strong>poids</strong> du modèle — fixes, fonction du nombre de paramètres et de la quantization ;</li>
+<li>le <strong>cache KV</strong> — variable, il grandit avec la fenêtre de contexte et le nombre d'utilisateurs simultanés ;</li>
+<li>l'<strong>overhead</strong> du moteur — activations, buffers, fragmentation : compter 1 à 2 Go.</li>
+</ol>
+<p>Le schéma ci-dessous matérialise cette répartition dans une enveloppe de 24 Go : les poids en orange (fixes), le cache KV en violet (variable), l'overhead en gris, et la marge qu'il est prudent de conserver.</p>
+<p><img alt="Budget mémoire : poids, cache KV et overhead dans l'enveloppe RAM/VRAM" src="../08-images/ch1-budget-memoire.svg" /></p>
+<p>La règle d'or à retenir : <strong>MÉMOIRE DISPONIBLE ≥ POIDS + CACHE KV + OVERHEAD</strong>. Les trois blocs du schéma détaillent les leviers de chaque terme — la quantization pour les poids, <code>num_ctx</code> et le batching pour le cache KV, l'offload partiel quand l'enveloppe déborde.</p>
+<h3>La quantization : compresser les poids</h3>
+<p>La <strong>quantization</strong> réduit la précision de stockage des paramètres : on divise la mémoire au prix d'une légère perte de qualité. Les modèles GGUF servis par Ollama utilisent des niveaux nommés Q8, Q5_K_M, Q4_K_M…</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Précision</th>
+<th>Octets / param</th>
+<th>7B ≈</th>
+<th>70B ≈</th>
+<th>Qualité</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FP16 / BF16 (natif)</td>
+<td>2,0</td>
+<td>~14 Go</td>
+<td>~140 Go</td>
+<td>référence</td>
+</tr>
+<tr>
+<td>Q8 / INT8</td>
+<td>~1,0</td>
+<td>~7 Go</td>
+<td>~70 Go</td>
+<td>quasi identique</td>
+</tr>
+<tr>
+<td>Q5_K_M</td>
+<td>~0,69</td>
+<td>~5 Go</td>
+<td>~48 Go</td>
+<td>très bon, confortable pour développer</td>
+</tr>
+<tr>
+<td>Q4_K_M</td>
+<td>~0,56</td>
+<td>~4 Go</td>
+<td>~40 Go</td>
+<td>bon, minimum recommandé</td>
+</tr>
+<tr>
+<td>Q3_K</td>
+<td>~0,43</td>
+<td>~3 Go</td>
+<td>~30 Go</td>
+<td>dégradation visible</td>
+</tr>
+<tr>
+<td>Q2_K</td>
+<td>~0,33</td>
+<td>~2,5 Go</td>
+<td>~26 Go</td>
+<td>à éviter sauf contrainte forte</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout tip"><div class="callout-title">Raccourcis mentaux</div><p>En <strong>Q4</strong>, la taille des poids en Go ≈ la <strong>moitié</strong> du nombre de paramètres en milliards : 7B → ~4 Go, 70B → ~40 Go. En <strong>FP16</strong>, c'est le <strong>double</strong> : 7B → ~14 Go. Formule générale : <code>POIDS = NB_PARAMS × OCTETS_PAR_PARAM</code>.</p></div>
+<h3>Quelle gamme de modèle selon sa machine ?</h3>
+<p>Tableau de décision pour un poste mono-utilisateur, en quantization Q4_K_M :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>RAM / VRAM disponible</th>
+<th>Gamme réaliste</th>
+<th>Exemples de familles</th>
+<th>Remarque</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>≤ 8 Go</td>
+<td>3B – 8B Q4</td>
+<td>Llama 3.x 8B, Qwen 7B, Phi</td>
+<td>contexte modéré (≤ 8k)</td>
+</tr>
+<tr>
+<td>12 – 16 Go</td>
+<td>8B – 14B Q4/Q5</td>
+<td>Qwen 14B, Gemma 9B</td>
+<td>RAG possible, surveiller le cache KV</td>
+</tr>
+<tr>
+<td>24 Go</td>
+<td>14B – 32B Q4</td>
+<td>Qwen 32B, Gemma 27B</td>
+<td>le point d'équilibre grand public</td>
+</tr>
+<tr>
+<td>48 Go</td>
+<td>32B – 70B Q4</td>
+<td>Llama 70B Q4</td>
+<td>confortable, contexte large possible</td>
+</tr>
+<tr>
+<td>2 × 80 Go (serveur)</td>
+<td>70B FP16 / 100B+</td>
+<td>multi-GPU + parallélisme</td>
+<td>production multi-utilisateur</td>
+</tr>
+</tbody>
+</table></div>
+<p>Pour un usage <strong>multi-utilisateur</strong>, viser une gamme en dessous de ce que la mémoire permet en mono-utilisateur : la mémoire libérée part dans le cache KV multiplié par le nombre d'utilisateurs.</p>
+<h3>CPU, GPU et RAM unifiée</h3>
+<ul>
+<li><strong>CPU / RAM</strong> : lent (faible bande passante mémoire) mais grande capacité et bon marché. Viable pour de petits modèles ou un usage non temps réel.</li>
+<li><strong>GPU / VRAM</strong> : rapide (forte bande passante) mais capacité limitée et coûteux. Indispensable au temps réel et au multi-utilisateur.</li>
+<li><strong>RAM unifiée</strong> (Apple Silicon, certains APU) : CPU et GPU partagent un seul pool mémoire à bonne bande passante. Un Mac 64 Go charge ainsi un modèle qu'aucun GPU grand public ne contiendrait. Ollama exploite ce mode via Metal.</li>
+</ul>
+<p>Ollama gère les trois configurations et répartit automatiquement les couches du modèle entre GPU et CPU quand la VRAM ne suffit pas — un offload partiel, pilotable finement avec le paramètre <code>num_gpu</code> (nombre de couches déchargées sur le GPU, <code>0</code> = tout sur CPU).</p>
+</div>
+
+<div id="tab-fenetre-de-contexte-et-cache-kv" class="tab-content">
+<h3>La fenêtre de contexte (<code>num_ctx</code>)</h3>
+<p>La <strong>fenêtre de contexte</strong> (context window) est le nombre maximal de jetons que le modèle « voit » à la fois : prompt système + historique + documents + réponse en cours. C'est la seule surface par laquelle le modèle perçoit quoi que ce soit — ce qui n'y figure pas n'existe pas pour lui.</p>
+<p>Sa taille maximale est propre à chaque modèle (4k, 8k, 32k, 128k…). Dans Ollama, le paramètre <code>num_ctx</code> fixe la fenêtre effectivement allouée à l'exécution ; la valeur par défaut est volontairement basse (2048 ou 4096 selon les versions) pour ménager la mémoire. Elle se règle par requête (API), par modèle (Modelfile) ou globalement (variable d'environnement).</p>
+<p>Une requête transporte toujours la totalité du contexte : le modèle étant sans état, chaque requête renvoie le prompt système, la conversation complète jusqu'alors et les résultats d'outils. La structure typique d'un prompt de chat :</p>
+<div class="code-block"><pre><code class="language-json">{
+  &quot;messages&quot;: [
+    {&quot;role&quot;: &quot;system&quot;,    &quot;content&quot;: &quot;Instructions permanentes de l'assistant.&quot;},
+    {&quot;role&quot;: &quot;user&quot;,      &quot;content&quot;: &quot;Bonjour, pouvez-vous m'aider à coder ?&quot;},
+    {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;Bien sûr ! Que souhaitez-vous coder ?&quot;},
+    {&quot;role&quot;: &quot;user&quot;,      &quot;content&quot;: &quot;Un script Python pour trier une liste.&quot;}
+  ]
+}
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="callout warn"><div class="callout-title">Le piège classique du contexte tronqué</div><p>Avec le <code>num_ctx</code> par défaut, une longue conversation ou un gros fichier injecté dépasse vite la fenêtre : le début du contexte est tronqué et le modèle « oublie » les instructions système ou le code fourni plus tôt. Symptôme typique : l'assistant contredit une décision prise dix tours auparavant. Remède : augmenter <code>num_ctx</code> — en acceptant son coût mémoire — et charger un contexte pertinent plutôt que massif.</p></div>
+<h3>Le cache KV : pourquoi le contexte coûte de la mémoire</h3>
+<p>Pour ne pas recalculer tout l'historique à chaque nouveau jeton, le modèle mémorise, pour chaque jeton déjà traité, des vecteurs <strong>K</strong> (clé) et <strong>V</strong> (valeur) <strong>par couche</strong> : c'est le cache KV. Il vit <strong>en plus</strong> des poids, et sa taille suit la formule :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Facteur</th>
+<th>Effet sur le cache KV</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>2 × nb_couches × n_kv_heads × head_dim</code></td>
+<td>Dimension « cachée » réservée à l'attention — dépend du modèle (réduite par la GQA)</td>
+</tr>
+<tr>
+<td><code>num_ctx</code></td>
+<td>Coût <strong>linéaire</strong> en longueur de contexte — dépend de l'usage</td>
+</tr>
+<tr>
+<td><code>batch</code> (séquences simultanées)</td>
+<td>Coût <strong>linéaire</strong> — clé du dimensionnement multi-utilisateur</td>
+</tr>
+<tr>
+<td>Précision (octets)</td>
+<td>FP16 = 2 octets ; le cache KV quantifié (Q8/Q4) divise par 2 à 4</td>
+</tr>
+</tbody>
+</table></div>
+<p>Quantifier le cache KV est <strong>distinct</strong> de quantifier les poids : par défaut le cache KV reste en FP16, même avec un modèle Q4. Dans Ollama, c'est la variable <code>OLLAMA_KV_CACHE_TYPE</code> (<code>q8_0</code>, <code>q4_0</code>) qui le pilote.</p>
+<p>Ordre de grandeur pour un Llama 3 8B en FP16 : <strong>0,12 à 0,5 Go par tranche de 1 000 jetons</strong> de contexte et par séquence. Sur un 70B, c'est plusieurs fois plus. Un contexte de 32k jetons peut coûter <strong>plus de mémoire que les poids eux-mêmes</strong>.</p>
+<h3>Mono-utilisateur contre multi-utilisateur : le batching</h3>
+<p>En <strong>mono-utilisateur</strong> (poste de travail, agent personnel), une requête à la fois : on optimise la latence d'une seule séquence ; le cache KV total vaut celui d'une séquence. Ollama est taillé pour cet usage.</p>
+<p>En <strong>multi-utilisateur</strong> (API d'équipe, production), N requêtes concurrentes : le <strong>batching</strong> traite plusieurs séquences dans le même passage GPU, et le cache KV est <strong>multiplié par le nombre de séquences actives</strong>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Mono-utilisateur</th>
+<th>Multi-utilisateur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Objectif</td>
+<td>latence</td>
+<td>débit (requêtes/s, jetons/s)</td>
+</tr>
+<tr>
+<td>Moteur typique</td>
+<td>Ollama, llama.cpp</td>
+<td>vLLM, TGI, SGLang</td>
+</tr>
+<tr>
+<td>Mémoire dominée par</td>
+<td>les poids</td>
+<td>le cache KV × N</td>
+</tr>
+<tr>
+<td>Technique clé</td>
+<td>offload, quantization</td>
+<td>continuous batching + PagedAttention</td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout note"><div class="callout-title">Le réflexe de dimensionnement</div><p>En multi-utilisateur, ce n'est généralement pas la taille du modèle qui sature la mémoire, mais le cache KV cumulé. Dimensionner d'abord <code>nb_utilisateurs × num_ctx</code>, puis choisir la taille du modèle dans ce qui reste. Dans Ollama, <code>OLLAMA_NUM_PARALLEL</code> fixe le nombre de requêtes traitées en parallèle — et donc le multiplicateur de cache KV.</p></div>
+</div>
+
+<div id="tab-moteurs-d-inference-et-formats-de-modeles" class="tab-content">
+<h3>Les formats de poids</h3>
+<ul>
+<li><strong>GGUF</strong> : format quantisé de llama.cpp et Ollama (Q4_K_M, Q5_K_M…). Tourne sur CPU <strong>et</strong> GPU, permet l'offload partiel. C'est le format utilisé dans toute cette formation.</li>
+<li><strong>EXL2</strong> : format d'ExLlamaV2, quantization à bits variables (4.0, 4.65, 6.0 bpw…), GPU uniquement, très rapide en mono-GPU.</li>
+<li><strong>safetensors FP16 / AWQ / GPTQ</strong> : formats consommés par vLLM (GPU) ; AWQ et GPTQ sont des quantizations 4 bits orientées serveur.</li>
+</ul>
+<h3>Comparatif des moteurs</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Moteur</th>
+<th>Matériel</th>
+<th>Formats</th>
+<th>Batching multi-utilisateur</th>
+<th>Quand l'utiliser</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>CPU, GPU, RAM unifiée</td>
+<td>GGUF</td>
+<td>basique</td>
+<td>Poste perso, démo, prototypage, mono-utilisateur</td>
+</tr>
+<tr>
+<td><strong>llama.cpp</strong></td>
+<td>CPU, GPU, RAM unifiée</td>
+<td>GGUF</td>
+<td>léger (<code>--parallel</code>)</td>
+<td>Matériel modeste, edge, CPU seul, contrôle bas niveau</td>
+</tr>
+<tr>
+<td><strong>vLLM</strong></td>
+<td>GPU (NVIDIA surtout)</td>
+<td>safetensors, AWQ, GPTQ</td>
+<td>excellent (continuous batching)</td>
+<td>Production multi-utilisateur, API à fort trafic</td>
+</tr>
+<tr>
+<td><strong>ExLlamaV2</strong></td>
+<td>GPU uniquement</td>
+<td>EXL2</td>
+<td>limité</td>
+<td>Un seul GPU grand public, latence minimale</td>
+</tr>
+</tbody>
+</table></div>
+<p>Ollama s'appuie en interne sur le moteur llama.cpp : même mécanique d'inférence GGUF, enveloppée dans un serveur HTTP, un gestionnaire de modèles et un CLI. C'est ce compromis « zéro friction » qui en fait l'outil retenu pour cette formation.</p>
+<h3>L'arbre de décision du choix de modèle</h3>
+<ol>
+<li><strong>Mémoire</strong> : pas de GPU ou RAM unifiée Mac → Ollama/llama.cpp (GGUF), modèle limité par la RAM ; un GPU grand public (8–24 Go) → Q4_K_M via Ollama ; plusieurs GPU ou serveur → vLLM avec parallélisme.</li>
+<li><strong>Utilisateurs simultanés</strong> : seul → optimiser la latence (Ollama) ; en équipe → dimensionner le cache KV pour N séquences (vLLM).</li>
+<li><strong>Besoin de contexte</strong> : court (chat, questions/réponses) → <code>num_ctx</code> 4k–8k ; long (RAG, gros documents) → 32k+, prévoir la mémoire du cache KV, activer la quantization KV.</li>
+<li><strong>Capacités spéciales</strong> : images → modèle multimodal (Llama Vision, LLaVA, Qwen-VL) avec marge mémoire ; raisonnement complexe → modèle « reasoning » ; sinon un modèle « instruct » classique, plus léger et plus rapide.</li>
+</ol>
+<h3>Multimodal et reasoning, deux capacités qui coûtent cher</h3>
+<p>Un modèle <strong>multimodal</strong> ingère du texte et des images (voire de l'audio). Coût : un encodeur de vision s'ajoute aux poids, et chaque image consomme beaucoup de jetons de contexte — donc de cache KV. Vérifier la compatibilité modèle × moteur avant de choisir : le support de la vision est inégal selon les moteurs.</p>
+<p>Un modèle <strong>reasoning</strong> est entraîné à « réfléchir » avant de répondre : il émet une chaîne de raisonnement, souvent entre balises <code>&lt;think&gt;…&lt;/think&gt;</code>, séparée de la réponse finale. Il génère beaucoup plus de jetons — latence accrue, cache KV plus grand, contexte plus large requis. Pertinent pour les maths, la logique et le code difficile ; inutile et coûteux pour de l'extraction, de la reformulation ou du chat simple.</p>
+<h3>Au-delà d'un seul accélérateur : les parallélismes</h3>
+<p>Quand un modèle ne tient pas sur un seul accélérateur, ou qu'on cherche plus de débit, on distribue le calcul. Quatre stratégies, souvent combinées — utiles à connaître pour lire une documentation serveur, même si Ollama en mono-poste n'en exploite qu'une version simplifiée :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Stratégie</th>
+<th>Résout…</th>
+<th>Découpe</th>
+<th>Communication</th>
+<th>Multi-nœuds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Tensor parallelism</strong></td>
+<td>modèle trop gros + vitesse</td>
+<td>chaque matrice d'une couche en tranches réparties sur plusieurs GPU</td>
+<td>énorme (à chaque couche) — exige NVLink/PCIe rapide</td>
+<td>non, intra-machine</td>
+</tr>
+<tr>
+<td><strong>Pipeline parallelism</strong></td>
+<td>modèle trop gros</td>
+<td>par blocs de couches (GPU 0 = couches 1–20, GPU 1 = 21–40…)</td>
+<td>faible (entre étages)</td>
+<td>oui</td>
+</tr>
+<tr>
+<td><strong>Model parallelism</strong></td>
+<td>terme générique : le modèle est partitionné</td>
+<td>tensor et/ou pipeline</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>Data parallelism</strong></td>
+<td>débit / nombre d'utilisateurs</td>
+<td>aucune : le modèle entier est <strong>répliqué</strong>, les requêtes sont réparties</td>
+<td>nulle entre répliques</td>
+<td>oui</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le data parallelism suppose que le modèle tient <strong>en entier</strong> sur un seul accélérateur : c'est de la scalabilité horizontale (N répliques derrière un répartiteur de charge), pas une solution au « modèle trop gros ».</p>
+<p>Combinaison typique en production : tensor parallelism intra-nœud (entre GPU NVLink d'une même machine) + pipeline parallelism inter-nœuds (entre machines via le réseau) + data parallelism pour répliquer l'ensemble et absorber le trafic. vLLM expose ces réglages (<code>--tensor-parallel-size N</code>, <code>--pipeline-parallel-size N</code>) ; llama.cpp et Ollama répartissent par couches, dans l'esprit du pipeline.</p>
+</div>
+
+<div id="tab-ollama-presentation-et-architecture" class="tab-content">
+<h3>Ce qu'Ollama apporte</h3>
+<p>Ollama réduit l'exécution locale d'un LLM à trois gestes : <strong>télécharger</strong> un modèle (<code>ollama pull</code>), le <strong>lancer</strong> (<code>ollama run</code>), l'<strong>interroger</strong> (CLI ou HTTP). Sous le capot, c'est un serveur résident qui :</p>
+<ul>
+<li>gère un <strong>registre local</strong> de modèles au format GGUF, téléchargés depuis la bibliothèque officielle (ollama.com/library) ;</li>
+<li><strong>charge et décharge</strong> les modèles de la mémoire à la demande, avec une durée de maintien configurable (<code>keep_alive</code>) ;</li>
+<li>expose une <strong>API REST</strong> (port 11434 par défaut) et un endpoint <strong>compatible OpenAI</strong> ;</li>
+<li>répartit l'inférence entre <strong>CPU, GPU ou RAM unifiée</strong>, avec offload partiel automatique.</li>
+</ul>
+<p>Le diagramme suivant montre cette organisation : à gauche les clients (CLI, scripts HTTP, SDK OpenAI, harnais du chapitre 2), au centre le serveur Ollama et ses trois étages — gestionnaire de modèles, ordonnanceur, moteur llama.cpp —, à droite le stockage GGUF et le matériel cible.</p>
+<p><img alt="Architecture d'Ollama : clients, serveur 11434, modèles GGUF et matériel" src="../08-images/ch1-architecture-ollama.svg" /></p>
+<p>Le point clé du diagramme : <strong>tous les clients parlent au même serveur</strong>. Le CLI <code>ollama run</code> n'est qu'un client de l'API comme les autres — c'est ce qui permet, au chapitre 2, de brancher n'importe quel assistant IA sur Ollama sans rien changer à l'installation. La bande inférieure rappelle le cycle de vie d'un modèle : pull (disque) → run (mémoire) → keep_alive (maintien) → déchargement automatique → rm (suppression du disque).</p>
+<h3>Installation native</h3>
+<p><strong>Windows et macOS</strong> : télécharger l'installateur depuis la page officielle de téléchargement d'Ollama (ollama.com/download). L'installateur enregistre le serveur comme application de session ; l'API écoute sur <code>http://localhost:11434</code>.</p>
+<p><strong>Linux</strong> : le script d'installation officiel installe le binaire et le service systemd :</p>
+<div class="code-block"><pre><code class="language-bash">curl -fsSL https://ollama.com/install.sh | sh
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Épingler une version précise si nécessaire :</p>
+<div class="code-block"><pre><code class="language-bash">curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.5.7 sh
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Vérification immédiate après installation :</p>
+<div class="code-block"><pre><code class="language-bash">ollama --version
+ollama list          # vide au premier lancement : aucun modèle téléchargé
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="callout tip"><div class="callout-title">Premier lancement réussi</div><p><code>ollama run llama3.2</code> télécharge le modèle (~2 Go en Q4) s'il est absent, puis ouvre une invite conversationnelle. La commande <code>/bye</code> quitte la session. C'est le test de bout en bout minimal : téléchargement, chargement en mémoire, inférence.</p></div>
+<h3>Variables d'environnement utiles</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Rôle</th>
+<th>Exemple</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OLLAMA_HOST</code></td>
+<td>Adresse d'écoute du serveur</td>
+<td><code>0.0.0.0:11434</code> pour exposer sur le réseau</td>
+</tr>
+<tr>
+<td><code>OLLAMA_MODELS</code></td>
+<td>Emplacement des modèles téléchargés</td>
+<td><code>/data/ollama</code></td>
+</tr>
+<tr>
+<td><code>OLLAMA_KEEP_ALIVE</code></td>
+<td>Durée de maintien des modèles en mémoire</td>
+<td><code>1h</code>, <code>-1</code> (toujours), <code>0</code> (immédiat)</td>
+</tr>
+<tr>
+<td><code>OLLAMA_NUM_PARALLEL</code></td>
+<td>Requêtes traitées en parallèle</td>
+<td><code>2</code>, <code>4</code></td>
+</tr>
+<tr>
+<td><code>OLLAMA_KV_CACHE_TYPE</code></td>
+<td>Quantization du cache KV</td>
+<td><code>q8_0</code>, <code>q4_0</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="callout danger"><div class="callout-title">Exposer Ollama sur le réseau</div><p>Ollama n'implémente <strong>aucune authentification</strong>. Régler <code>OLLAMA_HOST=0.0.0.0</code> rend le serveur accessible à quiconque atteint le port 11434 — exécution de modèles à volonté, lecture des modèles présents. En entreprise, ne l'exposer que sur un réseau maîtrisé, idéalement derrière un reverse-proxy authentifiant. Par défaut (<code>127.0.0.1</code>), seul le poste local y accède : c'est le réglage à conserver pendant la formation.</p></div>
+<h3>Installation Docker et Docker Compose</h3>
+<p>Ollama est publié comme image Docker officielle (<code>ollama/ollama</code>). Sans GPU :</p>
+<div class="code-block"><pre><code class="language-bash">docker run -d -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>En environnement Docker Compose — la configuration retenue pour les ateliers de cette formation :</p>
+<div class="code-block"><pre><code class="language-yaml">services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - &quot;127.0.0.1:11434:11434&quot;
+    volumes:
+      - ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  ollama:
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="code-block"><pre><code class="language-bash">docker compose up -d
+docker compose logs -f ollama     # suivre le démarrage du serveur
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Le port est volontairement lié à <code>127.0.0.1</code> : Ollama reste accessible depuis le poste hôte (y compris Windows via <code>http://localhost:11434</code>) sans être exposé au réseau local. Le volume nommé <code>ollama</code> persiste les modèles entre deux recréations de conteneur — sans lui, chaque <code>docker compose down</code> effacerait des dizaines de gigaoctets téléchargés.</p>
+<h3>GPU NVIDIA dans Docker : les prérequis</h3>
+<p>Le GPU s'utilise dans un conteneur à deux conditions, installées <strong>sur l'hôte</strong> :</p>
+<ol>
+<li>le <strong>pilote NVIDIA</strong> de la machine hôte ;</li>
+<li>le <strong>NVIDIA Container Toolkit</strong>, qui injecte le pilote et les bibliothèques CUDA dans les conteneurs.</li>
+</ol>
+<div class="code-block"><pre><code class="language-bash"># Debian : installer le toolkit depuis le dépôt officiel NVIDIA, puis configurer Docker
+sudo apt-get install -y nvidia-container-toolkit
+sudo nvidia-ctk runtime configure --runtime=docker
+sudo systemctl restart docker
+
+# Test : nvidia-smi doit s'exécuter DANS le conteneur
+docker run --rm --gpus all ubuntu nvidia-smi
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="callout warn"><div class="callout-title">Windows + WSL2 : ne pas réinstaller le pilote dans Ubuntu</div><p>Sous Windows 11, Docker Desktop s'appuie sur une VM WSL2. Le pilote NVIDIA <strong>Windows</strong> compatible WSL suffit : le GPU est transmis à la VM automatiquement. Installer en plus un pilote NVIDIA Linux dans la distribution Ubuntu casse la détection du GPU. Vérification dans Ubuntu : <code>nvidia-smi</code>, puis <code>docker run --rm --gpus all ubuntu nvidia-smi</code>. Ne pas installer non plus deux démons Docker (Docker Desktop + Docker Engine dans la VM) : les conflits sont garantis.</p></div>
+<h3>Dimensionner la VM WSL2 pour un modèle local</h3>
+<p>Configuration WSL2 recommandée pour le développement assisté — fichier <code>%UserProfile%\.wslconfig</code> sous Windows :</p>
+<div class="code-block"><pre><code class="language-ini">[wsl2]
+memory=48GB
+processors=10
+swap=12GB
+localhostForwarding=true
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Appliquer ensuite avec <code>wsl --shutdown</code>. Ne jamais attribuer toute la RAM physique à WSL : Windows doit rester confortable. Ordres de grandeur pour un modèle 27B quantifié Q4 :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Ressource</th>
+<th>Minimum réaliste</th>
+<th>Recommandé</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RAM machine</td>
+<td>32 Go</td>
+<td>64 Go</td>
+</tr>
+<tr>
+<td>RAM attribuée à WSL</td>
+<td>24 Go</td>
+<td>40–48 Go</td>
+</tr>
+<tr>
+<td>VRAM GPU</td>
+<td>16 Go (quantifié)</td>
+<td>24 Go ou plus</td>
+</tr>
+<tr>
+<td>Stockage libre WSL</td>
+<td>60 Go</td>
+<td>120 Go</td>
+</tr>
+<tr>
+<td>CPU attribués</td>
+<td>6</td>
+<td>8–12</td>
+</tr>
+<tr>
+<td>Swap WSL</td>
+<td>8 Go</td>
+<td>12–16 Go</td>
+</tr>
+</tbody>
+</table></div>
+<p>Un 27B en Q4 occupe typiquement 16 à 20 Go, auxquels s'ajoutent le cache de contexte et l'overhead. Avec seulement 16 Go de RAM totale ou un GPU de 8 Go, l'exécution reste possible partiellement sur CPU — mais les performances seront médiocres. Les projets doivent vivre dans le système de fichiers Linux (<code>~/code/mon-projet</code>), pas sous <code>/mnt/c/...</code>, pour éviter lenteurs et problèmes de permissions.</p>
+</div>
+
+<div id="tab-gerer-les-modeles-pull-run-list-show-ps-rm" class="tab-content">
+<h3>Le cycle de vie complet en commandes</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Commande</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ollama pull llama3.2</code></td>
+<td>Télécharge le modèle depuis le registre vers <code>~/.ollama/models</code></td>
+</tr>
+<tr>
+<td><code>ollama run llama3.2</code></td>
+<td>Charge le modèle en mémoire (le télécharge si absent) et ouvre le chat CLI</td>
+</tr>
+<tr>
+<td><code>ollama run llama3.2 "prompt"</code></td>
+<td>Exécution ponctuelle : réponse affichée puis retour au shell</td>
+</tr>
+<tr>
+<td><code>ollama list</code></td>
+<td>Liste les modèles présents sur le disque (taille, date, famille de paramètres)</td>
+</tr>
+<tr>
+<td><code>ollama show llama3.2</code></td>
+<td>Affiche les détails d'un modèle : paramètres, template, contexte, licence</td>
+</tr>
+<tr>
+<td><code>ollama ps</code></td>
+<td>Liste les modèles <strong>chargés en mémoire</strong> et leur répartition CPU/GPU</td>
+</tr>
+<tr>
+<td><code>ollama stop llama3.2</code></td>
+<td>Décharge immédiatement un modèle de la mémoire</td>
+</tr>
+<tr>
+<td><code>ollama rm llama3.2</code></td>
+<td>Supprime le modèle du disque</td>
+</tr>
+<tr>
+<td><code>ollama cp llama3.2 dev</code></td>
+<td>Duplique un modèle sous un nouveau nom</td>
+</tr>
+</tbody>
+</table></div>
+<p>Le nom d'un modèle suit la syntaxe <code>nom[:tag]</code> — le tag désigne la variante (taille, quantization). Sans tag, Ollama utilise <code>latest</code>. Exemples : <code>llama3.2</code> (3B par défaut), <code>llama3.1:8b</code>, <code>llama3.1:70b</code>, <code>qwen2.5:14b</code>. Vérifier le tag exact dans la bibliothèque officielle avant tout pull : un tag erroné renvoie une erreur de manifeste.</p>
+<h3><code>ollama ps</code> : lire la répartition CPU/GPU</h3>
+<div class="code-block"><pre><code class="language-bash">ollama ps
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<div class="code-block"><pre><code class="language-text">NAME            ID            SIZE     PROCESSOR     UNTIL
+llama3.1:8b     bcfb190ca3a7  6,2 GB   100% GPU      4 minutes from now
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>La colonne <code>PROCESSOR</code> indique la part d'inférence exécutée sur le GPU. <code>100% GPU</code> est l'objectif sur un poste équipé ; <code>48%/52% CPU/GPU</code> signale un offload partiel — le modèle déborde de la VRAM, la latence s'en ressent. La colonne <code>UNTIL</code> rappelle l'échéance <code>keep_alive</code> au-delà de laquelle le modèle sera déchargé.</p>
+<div class="callout note"><div class="callout-title">Le chargement est paresseux, le maintien est temporaire</div><p>Un modèle n'occupe de la mémoire qu'après un premier <code>run</code> (ou une requête API), et la libère après <code>keep_alive</code> (5 minutes par défaut). Sur un poste limité, <code>ollama stop</code> rend la mémoire immédiatement ; sur un serveur sollicité en continu, <code>OLLAMA_KEEP_ALIVE=-1</code> évite les rechargements coûteux.</p></div>
+<h3>Modelfile : figer une configuration de modèle</h3>
+<p>Le <strong>Modelfile</strong> est au modèle ce qu'un Dockerfile est à une image : une recette déclarative qui personnalise un modèle de base — prompt système, paramètres d'échantillonnage, fenêtre de contexte.</p>
+<div class="code-block"><pre><code class="language-dockerfile">FROM llama3.2
+# sets the temperature to 1 [higher is more creative, lower is more coherent]
+PARAMETER temperature 1
+# sets the context window size to 4096
+PARAMETER num_ctx 4096
+
+SYSTEM Vous êtes un assistant de revue de code. Répondez en français, soyez factuel.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Création et utilisation :</p>
+<div class="code-block"><pre><code class="language-bash">ollama create revue-code -f Modelfile
+ollama run revue-code
+ollama show revue-code --modelfile     # retrouver la recette d'un modèle existant
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>C'est le mécanisme à retenir pour livrer à une équipe un modèle « pré-configuré » : même base, mêmes paramètres, même comportement, versionnable dans un dépôt Git.</p>
+</div>
+
+<div id="tab-interagir-via-le-cli-et-l-api-http" class="tab-content">
+<h3>Le CLI conversationnel</h3>
+<p><code>ollama run llama3.2</code> ouvre une invite interactive. Commandes internes utiles :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Commande CLI</th>
+<th>Effet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/bye</code></td>
+<td>Quitte la session</td>
+</tr>
+<tr>
+<td><code>/show info</code></td>
+<td>Affiche les métadonnées du modèle chargé</td>
+</tr>
+<tr>
+<td><code>/show context</code></td>
+<td>Affiche l'occupation courante de la fenêtre de contexte</td>
+</tr>
+<tr>
+<td><code>/set verbose</code></td>
+<td>Active l'affichage détaillé (latences, vitesse en jetons/s)</td>
+</tr>
+<tr>
+<td><code>""" ... """</code></td>
+<td>Envoie un prompt multi-ligne (coller du code)</td>
+</tr>
+<tr>
+<td><code>#</code> en début de ligne</td>
+<td>Ajoute un message au prompt système persistant du modèle</td>
+</tr>
+</tbody>
+</table></div>
+<p>En mode verbose, la sortie de chaque réponse détaille le temps de chargement, le débit d'inférence (jetons/s) et le nombre de jetons d'entrée/sortie : c'est l'outil de diagnostic immédiat pour comprendre un modèle lent ou un contexte saturé.</p>
+<h3>L'API REST native</h3>
+<p>Le serveur expose une API JSON sur le port 11434. Les deux endpoints principaux :</p>
+<p><strong><code>/api/generate</code></strong> — génération de texte à partir d'un prompt brut :</p>
+<div class="code-block"><pre><code class="language-bash">curl http://localhost:11434/api/generate -d '{
+  &quot;model&quot;: &quot;llama3.2&quot;,
+  &quot;prompt&quot;: &quot;Explique en une phrase ce qu'est un LLM.&quot;,
+  &quot;stream&quot;: false
+}'
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p><strong><code>/api/chat</code></strong> — conversation avec rôles (le format utilisé par les assistants) :</p>
+<div class="code-block"><pre><code class="language-bash">curl http://localhost:11434/api/chat -d '{
+  &quot;model&quot;: &quot;llama3.2&quot;,
+  &quot;stream&quot;: false,
+  &quot;options&quot;: { &quot;temperature&quot;: 0.2, &quot;num_ctx&quot;: 8192 },
+  &quot;messages&quot;: [
+    { &quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;Tu réponds en français, de façon concise.&quot; },
+    { &quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Quelle est la complexité d'un tri fusion ?&quot; }
+  ]
+}'
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Les endpoints de gestion complètent le tableau : <code>/api/tags</code> (liste des modèles, pendant HTTP de <code>ollama list</code>), <code>/api/show</code> (détails), <code>/api/ps</code> (modèles chargés), <code>/api/pull</code> (téléchargement), <code>/api/embed</code> (vecteurs d'embeddings pour le RAG).</p>
+<p>Le paramètre <code>stream</code> mérite une décision explicite : <code>true</code> (défaut) envoie la réponse jeton par jeton au fur et à mesure de la génération — idéal pour une interface conversationnelle ; <code>false</code> renvoie le JSON complet d'un bloc — préférable pour un script qui parse la réponse. Les <code>options</code> de la requête (<code>temperature</code>, <code>num_ctx</code>, <code>seed</code>, <code>top_p</code>…) surchargent les paramètres du modèle pour cet appel.</p>
+<div class="callout tip"><div class="callout-title">Précharger un modèle pour supprimer la latence du premier appel</div><p>Le premier appel après un déchargement paie le chargement du modèle en mémoire (plusieurs secondes). Une requête vide le précharge :</p>
+<pre><code class="language-bash">curl http://localhost:11434/api/chat -d '{&quot;model&quot;: &quot;llama3.2&quot;}'
+</code></pre>
+<p>À placer dans un script de démarrage d'environnement de développement, juste avant l'ouverture de l'assistant IA.</p></div>
+<h3>L'endpoint compatible OpenAI</h3>
+<p>Ollama expose aussi <code>/v1/chat/completions</code> au format OpenAI. Tout client écrit pour l'API OpenAI fonctionne donc contre Ollama en changeant seulement l'URL de base — c'est le point de branchement des harnais du chapitre 2 :</p>
+<div class="code-block"><pre><code class="language-python">from openai import OpenAI
+
+client = OpenAI(
+    base_url=&quot;http://localhost:11434/v1/&quot;,
+    api_key=&quot;ollama&quot;,  # requis par le SDK, ignoré par Ollama
+)
+
+reponse = client.chat.completions.create(
+    model=&quot;llama3.2&quot;,
+    messages=[{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Dis que c'est un test&quot;}],
+)
+print(reponse.choices[0].message.content)
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>L'endpoint gère le streaming, le mode JSON, la vision, les outils (function calling) et le contrôle du raisonnement. Il n'implémente pas certaines fonctions avancées de l'API OpenAI (logprobs, logit_bias, choix multiples) — suffisant pour brancher un assistant, pas pour reproduire un SDK OpenAI complet.</p>
+</div>
+
+<div id="tab-parametrer-l-execution-d-un-modele" class="tab-content">
+<h3>Les paramètres qui comptent au quotidien</h3>
+<p>Ollama expose les paramètres d'inférence à trois niveaux : dans la requête API (<code>options</code>), dans le Modelfile (<code>PARAMETER</code>), ou via les variables d'environnement du serveur. Les plus utiles en développement assisté :</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Paramètre</th>
+<th>Défaut</th>
+<th>Rôle pratique</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>temperature</code></td>
+<td>~0,8</td>
+<td>Aléa / créativité : 0–0,3 pour du code et du factuel, 0,7–1,0 en conversation, 1,0+ en brainstorming</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>aléatoire</td>
+<td>Graine du générateur : mêmes paramètres + même graine = sortie reproductible (tests, démos)</td>
+</tr>
+<tr>
+<td><code>top_p</code> / <code>top_k</code></td>
+<td>0,9 / 40</td>
+<td>Troncatures du vocabulaire candidat ; ajuster <code>temperature</code> <strong>ou</strong> <code>top_p</code>, pas les deux à fond</td>
+</tr>
+<tr>
+<td><code>num_predict</code></td>
+<td>infini</td>
+<td>Nombre maximal de jetons générés — borne la latence, évite les réponses interminables</td>
+</tr>
+<tr>
+<td><code>num_ctx</code></td>
+<td>2048/4096</td>
+<td>Fenêtre de contexte allouée — le levier mémoire/qualité central</td>
+</tr>
+<tr>
+<td><code>num_keep</code></td>
+<td>—</td>
+<td>Jetons du début de contexte (prompt système) conservés lors d'une troncature</td>
+</tr>
+<tr>
+<td><code>num_gpu</code></td>
+<td>auto</td>
+<td>Nombre de couches déchargées sur le GPU ; baisser si la VRAM déborde</td>
+</tr>
+<tr>
+<td><code>num_thread</code></td>
+<td>cœurs physiques</td>
+<td>Threads CPU en inférence CPU ; régler au nombre de cœurs <strong>physiques</strong></td>
+</tr>
+<tr>
+<td><code>keep_alive</code></td>
+<td>5m</td>
+<td>Maintien en mémoire après la dernière requête (<code>0</code>, <code>5m</code>, <code>1h</code>, <code>-1</code>)</td>
+</tr>
+<tr>
+<td><code>use_mmap</code> / <code>use_mlock</code></td>
+<td>true / false</td>
+<td>Chargement mappé sur disque (démarrage rapide) / verrouillage en RAM (pas de swap)</td>
+</tr>
+<tr>
+<td><code>format</code></td>
+<td>texte</td>
+<td><code>"json"</code> ou un schéma JSON : force une sortie parsable par programme</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td>—</td>
+<td>Séquences qui stoppent la génération dès qu'elles apparaissent</td>
+</tr>
+</tbody>
+</table></div>
+<p>Deux réglages anti-répétition complètent le tableau : <code>repeat_penalty</code> (facteur pénalisant les jetons déjà vus, ~1,1 par défaut — monter à 1,15–1,3 si le modèle boucle) et <code>frequency_penalty</code> / <code>presence_penalty</code> (pénalités appliquées proportionnellement à la fréquence d'apparition / dès la première apparition).</p>
+<div class="callout note"><div class="callout-title">Reproductibilité contre réalisme</div><p>Un <code>seed</code> fixe combiné à une <code>temperature</code> basse rend les sorties reproductibles — précieux pour un test automatisé ou une démonstration. En usage courant de développement, laisser la graine aléatoire : le non-déterminisme est une propriété du mécanisme d'échantillonnage, pas un défaut à supprimer.</p></div>
+<h3>Recette : une configuration « développement assisté »</h3>
+<p>Pour un modèle local branché sur un assistant de code (chapitre 2), la configuration de départ recommandée :</p>
+<div class="code-block"><pre><code class="language-dockerfile">FROM llama3.1:8b
+PARAMETER temperature 0.2
+PARAMETER num_ctx 16384
+PARAMETER num_predict 4096
+
+SYSTEM Vous êtes un assistant de développement. Répondez en français,
+de façon concise et factuelle. Citez le code exact, sans commentaire superflu.
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<ul>
+<li><code>temperature 0.2</code> : sorties stables et factuelles, adaptées au code ;</li>
+<li><code>num_ctx 16384</code> : de la place pour l'historique de session et les fichiers injectés — vérifier que le cache KV correspondant tient en mémoire (<code>ollama ps</code>) ;</li>
+<li><code>num_predict 4096</code> : plafond de génération pour qu'une réponse runaway ne sature pas la fenêtre.</li>
+</ul>
+<h3>Diagnostic express des problèmes courants</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Symptôme</th>
+<th>Cause probable</th>
+<th>Correctif</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Première réponse très lente, suivantes rapides</td>
+<td>Chargement du modèle en mémoire</td>
+<td>Normal ; précharger ou allonger <code>keep_alive</code></td>
+</tr>
+<tr>
+<td>Réponses lentes en continu, <code>ollama ps</code> montre une part CPU</td>
+<td>VRAM insuffisante, offload partiel</td>
+<td>Modèle plus petit, quantization plus agressive, ou réduire <code>num_ctx</code></td>
+</tr>
+<tr>
+<td>Le modèle « oublie » les instructions en cours de session</td>
+<td>Fenêtre de contexte saturée puis tronquée</td>
+<td>Augmenter <code>num_ctx</code>, contextualiser moins mais mieux</td>
+</tr>
+<tr>
+<td>Le modèle répète des boucles de texte</td>
+<td>Échantillonnage trop conservateur ou contexte répétitif</td>
+<td><code>repeat_penalty</code> ↑, <code>temperature</code> ↑ légèrement, <code>presence_penalty</code> &gt; 0</td>
+</tr>
+<tr>
+<td>Sortie JSON invalide</td>
+<td>Contrainte de format absente</td>
+<td><code>"format": "json"</code> dans la requête + consigne explicite dans le prompt</td>
+</tr>
+<tr>
+<td>La RAM se remplit et le système swappe</td>
+<td><code>use_mlock</code> activé avec une RAM insuffisante, ou modèles empilés</td>
+<td>Désactiver <code>use_mlock</code>, <code>ollama stop</code> sur les modèles inutilisés</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+
+<div id="tab-atelier-llama-3-en-local-de-l-installation-a-l-api" class="tab-content">
+<p>L'atelier occupe l'après-midi du jour 1. Il déroule le cycle complet sur le poste de chaque stagiaire : installation, téléchargement d'un modèle Llama, conversation CLI, scripting HTTP, personnalisation par Modelfile et mesure de performances. Les six étapes sont progressives ; chacune se valide par une commande de contrôle avant de passer à la suivante.</p>
+<h3>Étape 1 — Installer et vérifier</h3>
+<p>Selon le poste du stagiaire (Windows/WSL2, macOS, Linux ou conteneur Docker Compose), installer Ollama en suivant les sections précédentes. Vérification attendue :</p>
+<div class="code-block"><pre><code class="language-bash">ollama --version        # ou : docker compose ps  (variante conteneur)
+curl http://localhost:11434/api/version
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Variante conteneur : toutes les commandes <code>ollama ...</code> passent par <code>docker exec -it ollama ollama ...</code>.</p>
+<h3>Étape 2 — Télécharger et inspecter un modèle</h3>
+<p>Choisir la taille du modèle selon la machine (tableau des gammes) : <code>llama3.2</code> (3B) pour un poste modeste, <code>llama3.1:8b</code> pour un poste standard.</p>
+<div class="code-block"><pre><code class="language-bash">ollama pull llama3.1:8b
+ollama list
+ollama show llama3.1:8b          # contexte maximal, taille des paramètres, quantization
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<h3>Étape 3 — Conversation CLI et diagnostic</h3>
+<div class="code-block"><pre><code class="language-bash">ollama run llama3.1:8b
+&gt;&gt;&gt; /set verbose
+&gt;&gt;&gt; Explique la différence entre RAM et VRAM pour l'inférence d'un LLM.
+&gt;&gt;&gt; /show context
+&gt;&gt;&gt; /bye
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<p>Relever dans la sortie verbose : le débit en jetons/s et l'occupation du contexte. Dans un autre terminal, pendant qu'un modèle tourne :</p>
+<div class="code-block"><pre><code class="language-bash">ollama ps        # taille chargée, % GPU, échéance keep_alive
+</code></pre><button class="copy-btn" onclick="copyCode(this)">Copier</button></div>
+<h3>Étape 4 — Scripter contre l'API</h3>
+<p>Écrire un script (Python ou curl) qui interroge <code>/api/chat</code> avec <code>stream: false</code>, <code>temperature: 0.2</code> et un prompt système imposant une réponse JSON, puis qui affiche la réponse parsée. Points de contrôle :</p>
+<ul>
+<li>la réponse est un JSON valide (utiliser <code>"format": "json"</code> si le modèle dérape) ;</li>
+<li>le temps de réponse s'effondre au second appel (modèle déjà chargé, <code>keep_alive</code>) ;</li>
+<li><code>ollama ps</code> montre le modèle chargé, puis son déchargement après expiration.</li>
+</ul>
+<h3>Étape 5 — Créer un modèle personnalisé</h3>
+<p>Avec le Modelfile de la section précédente, créer <code>revue-code</code>, lui soumettre un extrait de code du projet d'un stagiaire et comparer la réponse avec celle du modèle de base non personnalisé. Vérifier la persistance de la configuration avec <code>ollama show revue-code --modelfile</code>.</p>
+<p>Le formateur passe cette étape en revue : nom du modèle créé, paramètres visibles dans la recette, écart de comportement avec la base non personnalisée.</p>
+<h3>Étape 6 — Mesurer et comparer</h3>
+<p>Dernier geste de la journée : objectiver les performances de son installation. Avec <code>/set verbose</code> actif, relever pour un même prompt :</p>
+<ul>
+<li>le débit de génération (jetons/s) sur le GPU et sur le CPU (forcer <code>num_gpu 0</code> dans une requête API pour comparer) ;</li>
+<li>l'effet d'un <code>num_ctx</code> doublé sur la mémoire occupée (<code>ollama ps</code> avant/après) ;</li>
+<li>l'effet du <code>keep_alive</code> sur le temps de première réponse.</li>
+</ul>
+<p>Ces trois mesures ancrent les formules de la journée dans le réel : le stagiaire constate que le cache KV double avec le contexte, que le CPU plafonne en débit, et que le rechargement d'un modèle coûte plusieurs secondes. Noter les résultats : ils serviront de référence au chapitre 2 pour choisir le modèle branché sur l'assistant de développement.</p>
+<div class="callout tip"><div class="callout-title">Validation de fin de journée</div><p>Chaque stagiaire dispose d'un Ollama fonctionnel, d'au moins un modèle Llama téléchargé, d'un modèle personnalisé créé via Modelfile, et d'un script interrogeant l'API HTTP. Ces quatre éléments sont les prérequis des ateliers du chapitre 2 : le harnais OpenCode se branchera sur cette installation.</p></div>
+</div>
+
+<div id="tab-quiz" class="tab-content">
+<div id="quiz-container">
+<div class="quiz-question" id="q1">
+  <h4>Question 1 — Que fait réellement un modèle de langage (LLM) lors d'une requête ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(1,'a')">A) Il interroge une base de données de faits intégrée</button>
+    <button class="quiz-option" onclick="answer(1,'b')">B) Il prédit le jeton suivant à partir du contexte, un jeton à la fois</button>
+    <button class="quiz-option" onclick="answer(1,'c')">C) Il exécute directement des outils comme la lecture de fichiers</button>
+    <button class="quiz-option" onclick="answer(1,'d')">D) Il met à jour ses paramètres à partir des corrections reçues</button>
+  </div>
+  <div class="quiz-feedback" id="fb1"></div>
+</div>
+<div class="quiz-question" id="q2">
+  <h4>Question 2 — Pourquoi dit-on qu'un modèle est « sans état » (stateless) ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(2,'a')">A) Parce qu'il ne consomme ni RAM ni VRAM</button>
+    <button class="quiz-option" onclick="answer(2,'b')">B) Parce que ses paramètres sont figés et qu'il ne conserve rien entre les requêtes</button>
+    <button class="quiz-option" onclick="answer(2,'c')">C) Parce qu'il fonctionne hors ligne</button>
+    <button class="quiz-option" onclick="answer(2,'d')">D) Parce qu'il refuse les conversations multi-tours</button>
+  </div>
+  <div class="quiz-feedback" id="fb2"></div>
+</div>
+<div class="quiz-question" id="q3">
+  <h4>Question 3 — Combien pèse approximativement un modèle 7B en quantization Q4_K_M ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(3,'a')">A) ~14 Go</button>
+    <button class="quiz-option" onclick="answer(3,'b')">B) ~7 Go</button>
+    <button class="quiz-option" onclick="answer(3,'c')">C) ~4 Go</button>
+    <button class="quiz-option" onclick="answer(3,'d')">D) ~2,5 Go</button>
+  </div>
+  <div class="quiz-feedback" id="fb3"></div>
+</div>
+<div class="quiz-question" id="q4">
+  <h4>Question 4 — Quels sont les trois termes de la règle d'or du budget mémoire ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(4,'a')">A) MÉMOIRE ≥ POIDS + CACHE KV + OVERHEAD</button>
+    <button class="quiz-option" onclick="answer(4,'b')">B) MÉMOIRE ≥ CONTEXTE + VOCABULAIRE + BATCH</button>
+    <button class="quiz-option" onclick="answer(4,'c')">C) MÉMOIRE ≥ POIDS + TOKENIZER + SWAP</button>
+    <button class="quiz-option" onclick="answer(4,'d')">D) MÉMOIRE ≥ GPU + CPU + DISQUE</button>
+  </div>
+  <div class="quiz-feedback" id="fb4"></div>
+</div>
+<div class="quiz-question" id="q5">
+  <h4>Question 5 — Avec quoi grandit linéairement la taille du cache KV ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(5,'a')">A) Le nombre de paramètres du modèle uniquement</button>
+    <button class="quiz-option" onclick="answer(5,'b')">B) La fenêtre de contexte et le nombre de séquences simultanées</button>
+    <button class="quiz-option" onclick="answer(5,'c')">C) La température et le top_p</button>
+    <button class="quiz-option" onclick="answer(5,'d')">D) Le nombre de modèles téléchargés sur le disque</button>
+  </div>
+  <div class="quiz-feedback" id="fb5"></div>
+</div>
+<div class="quiz-question" id="q6">
+  <h4>Question 6 — Quel format de poids consomme Ollama ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(6,'a')">A) safetensors FP16</button>
+    <button class="quiz-option" onclick="answer(6,'b')">B) EXL2</button>
+    <button class="quiz-option" onclick="answer(6,'c')">C) GGUF</button>
+    <button class="quiz-option" onclick="answer(6,'d')">D) ONNX</button>
+  </div>
+  <div class="quiz-feedback" id="fb6"></div>
+</div>
+<div class="quiz-question" id="q7">
+  <h4>Question 7 — Quel moteur d'inférence privilégier pour une API de production multi-utilisateurs ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(7,'a')">A) Ollama</button>
+    <button class="quiz-option" onclick="answer(7,'b')">B) ExLlamaV2</button>
+    <button class="quiz-option" onclick="answer(7,'c')">C) llama.cpp en mode CPU</button>
+    <button class="quiz-option" onclick="answer(7,'d')">D) vLLM</button>
+  </div>
+  <div class="quiz-feedback" id="fb7"></div>
+</div>
+<div class="quiz-question" id="q8">
+  <h4>Question 8 — Sur quel port l'API REST d'Ollama écoute-t-elle par défaut ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(8,'a')">A) 8080</button>
+    <button class="quiz-option" onclick="answer(8,'b')">B) 11434</button>
+    <button class="quiz-option" onclick="answer(8,'c')">C) 3000</button>
+    <button class="quiz-option" onclick="answer(8,'d')">D) 5000</button>
+  </div>
+  <div class="quiz-feedback" id="fb8"></div>
+</div>
+<div class="quiz-question" id="q9">
+  <h4>Question 9 — Quelle commande affiche les modèles actuellement chargés en mémoire et leur répartition CPU/GPU ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(9,'a')">A) ollama list</button>
+    <button class="quiz-option" onclick="answer(9,'b')">B) ollama show</button>
+    <button class="quiz-option" onclick="answer(9,'c')">C) ollama ps</button>
+    <button class="quiz-option" onclick="answer(9,'d')">D) ollama top</button>
+  </div>
+  <div class="quiz-feedback" id="fb9"></div>
+</div>
+<div class="quiz-question" id="q10">
+  <h4>Question 10 — Pourquoi lier le port d'Ollama à 127.0.0.1 plutôt qu'à 0.0.0.0 dans Docker Compose ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(10,'a')">A) Pour accélérer l'inférence GPU</button>
+    <button class="quiz-option" onclick="answer(10,'b')">B) Parce qu'Ollama n'a aucune authentification : 0.0.0.0 l'exposerait à tout le réseau</button>
+    <button class="quiz-option" onclick="answer(10,'c')">C) Parce que Docker refuse les ports publics</button>
+    <button class="quiz-option" onclick="answer(10,'d')">D) Pour réduire la taille du cache KV</button>
+  </div>
+  <div class="quiz-feedback" id="fb10"></div>
+</div>
+<div class="quiz-question" id="q11">
+  <h4>Question 11 — Quel endpoint permet de brancher un client écrit pour l'API OpenAI sur Ollama ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(11,'a')">A) /api/generate</button>
+    <button class="quiz-option" onclick="answer(11,'b')">B) /api/tags</button>
+    <button class="quiz-option" onclick="answer(11,'c')">C) /v1/chat/completions</button>
+    <button class="quiz-option" onclick="answer(11,'d')">D) /openai/chat</button>
+  </div>
+  <div class="quiz-feedback" id="fb11"></div>
+</div>
+<div class="quiz-question" id="q12">
+  <h4>Question 12 — Quel réglage rend les sorties d'un modèle reproductibles pour une démonstration ?</h4>
+  <div class="quiz-options">
+    <button class="quiz-option" onclick="answer(12,'a')">A) temperature élevée + top_p = 1</button>
+    <button class="quiz-option" onclick="answer(12,'b')">B) seed fixe + temperature basse</button>
+    <button class="quiz-option" onclick="answer(12,'c')">C) num_ctx maximal</button>
+    <button class="quiz-option" onclick="answer(12,'d')">D) keep_alive = 0</button>
+  </div>
+  <div class="quiz-feedback" id="fb12"></div>
+</div>
+</div>
+<div class="quiz-score" id="quiz-score">
+  <div class="score-num" id="score-display">0 / 12</div>
+  <p id="score-msg"></p>
+  <button class="btn-restart" onclick="restartQuiz()">Recommencer</button>
+</div>
+</div>
+  </div>
+</div>
+
+<script>
+// ─── THEME ──────────────────────────────────────────────────────────────────
+(function () {
+  const root = document.documentElement;
+  const stored = localStorage.getItem('dawan-theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  updateToggleLabel();
+})();
+
+function updateToggleLabel() {
+  const current = document.documentElement.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent = current === 'dark' ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = current === 'dark' ? 'Sombre' : 'Clair';
+}
+
+function toggleTheme() {
+  const root = document.documentElement;
+  const current = root.getAttribute('data-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+  const next = current === 'dark' ? 'light' : 'dark';
+  root.setAttribute('data-theme', next);
+  localStorage.setItem('dawan-theme', next);
+  updateToggleLabel();
+}
+
+// ─── TABS ───────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.side-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  document.querySelector('.content').scrollTo({ top: 0, behavior: 'instant' });
+}
+
+// ─── COPY CODE ──────────────────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.previousElementSibling;
+  navigator.clipboard.writeText(pre.textContent).then(() => {
+    btn.textContent = 'Copié !'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+const answers = { 1:'b', 2:'b', 3:'c', 4:'a', 5:'b', 6:'c', 7:'d', 8:'b', 9:'c', 10:'b', 11:'c', 12:'b' };
+const feedbacks = {
+  1: { b: "Exact ! C'est l'unique mode de fonctionnement du modèle : distribution de probabilité sur les jetons, échantillonnage, ajout au contexte, recommencement. Ni base de faits, ni exécution d'outils, ni apprentissage en session.", wrong: "Non. La bonne réponse est B) Il prédit le jeton suivant à partir du contexte, un jeton à la fois — C'est l'unique mode de fonctionnement du modèle : distribution de probabilité sur les jetons, échantillonnage, ajout au contexte, recommencement. Ni base de faits, ni exécution d'outils, ni apprentissage en session." },
+  2: { b: "Exact ! Rien de ce qui se passe en inférence ne s'écrit dans les paramètres ; la continuité d'une conversation est fabriquée par le harnais qui renvoie l'historique à chaque requête.", wrong: "Non. La bonne réponse est B) Parce que ses paramètres sont figés et qu'il ne conserve rien entre les requêtes — Rien de ce qui se passe en inférence ne s'écrit dans les paramètres ; la continuité d'une conversation est fabriquée par le harnais qui renvoie l'historique à chaque requête." },
+  3: { c: "Exact ! Raccourci Q4 : la taille en Go ≈ la moitié du nombre de paramètres en milliards. FP16 donnerait ~14 Go, Q8 ~7 Go.", wrong: "Non. La bonne réponse est C) ~4 Go — Raccourci Q4 : la taille en Go ≈ la moitié du nombre de paramètres en milliards. FP16 donnerait ~14 Go, Q8 ~7 Go." },
+  4: { a: "Exact ! Les poids sont fixes (paramètres × octets/param), le cache KV varie avec l'usage, l'overhead moteur compte pour 1 à 2 Go.", wrong: "Non. La bonne réponse est A) MÉMOIRE ≥ POIDS + CACHE KV + OVERHEAD — Les poids sont fixes (paramètres × octets/param), le cache KV varie avec l'usage, l'overhead moteur compte pour 1 à 2 Go." },
+  5: { b: "Exact ! num_ctx et batch ont tous deux un effet linéaire sur le cache KV ; un contexte 32k peut coûter plus de mémoire que les poids.", wrong: "Non. La bonne réponse est B) La fenêtre de contexte et le nombre de séquences simultanées — num_ctx et batch ont tous deux un effet linéaire sur le cache KV ; un contexte 32k peut coûter plus de mémoire que les poids." },
+  6: { c: "Exact ! Format quantisé de llama.cpp/Ollama, CPU et GPU avec offload partiel. EXL2 est réservé à ExLlamaV2, safetensors/AWQ/GPTQ à vLLM.", wrong: "Non. La bonne réponse est C) GGUF — Format quantisé de llama.cpp/Ollama, CPU et GPU avec offload partiel. EXL2 est réservé à ExLlamaV2, safetensors/AWQ/GPTQ à vLLM." },
+  7: { d: "Exact ! Continuous batching et PagedAttention donnent le débit maximal en multi-utilisateur ; Ollama et llama.cpp ciblent le mono-utilisateur, ExLlamaV2 le mono-GPU.", wrong: "Non. La bonne réponse est D) vLLM — Continuous batching et PagedAttention donnent le débit maximal en multi-utilisateur ; Ollama et llama.cpp ciblent le mono-utilisateur, ExLlamaV2 le mono-GPU." },
+  8: { b: "Exact ! Port par défaut de l'API REST, configurable via OLLAMA_HOST.", wrong: "Non. La bonne réponse est B) 11434 — Port par défaut de l'API REST, configurable via OLLAMA_HOST." },
+  9: { c: "Exact ! Elle liste les modèles en mémoire avec la colonne PROCESSOR (% GPU/CPU) et l'échéance keep_alive ; ollama list ne montre que le contenu du disque.", wrong: "Non. La bonne réponse est C) ollama ps — Elle liste les modèles en mémoire avec la colonne PROCESSOR (% GPU/CPU) et l'échéance keep_alive ; ollama list ne montre que le contenu du disque." },
+  10: { b: "Exact ! Toute machine atteignant le port pourrait exécuter des modèles sans contrôle ; l'exposition réseau exige un reverse-proxy authentifiant.", wrong: "Non. La bonne réponse est B) Parce qu'Ollama n'a aucune authentification : 0.0.0.0 l'exposerait à tout le réseau — Toute machine atteignant le port pourrait exécuter des modèles sans contrôle ; l'exposition réseau exige un reverse-proxy authentifiant." },
+  11: { c: "Exact ! Endpoint compatible OpenAI : il suffit de changer l'URL de base du client, la clé API étant requise mais ignorée.", wrong: "Non. La bonne réponse est C) /v1/chat/completions — Endpoint compatible OpenAI : il suffit de changer l'URL de base du client, la clé API étant requise mais ignorée." },
+  12: { b: "Exact ! La graine fixe le générateur aléatoire et la température basse réduit l'échantillonnage créatif : mêmes entrées, mêmes sorties.", wrong: "Non. La bonne réponse est B) seed fixe + temperature basse — La graine fixe le générateur aléatoire et la température basse réduit l'échantillonnage créatif : mêmes entrées, mêmes sorties." }
+};
+const QUIZ_TOTAL = 12;
+let score = 0;
+let answered = {};
+
+function answer(qNum, choice) {
+  if (answered[qNum]) return;
+  answered[qNum] = true;
+  score += (choice === answers[qNum]) ? 1 : 0;
+  const qEl = document.getElementById('q' + qNum);
+  qEl.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = true;
+    const ltr = btn.textContent.trim()[0].toLowerCase();
+    if (ltr === answers[qNum]) btn.classList.add('correct');
+    else if (ltr === choice) btn.classList.add('wrong');
+  });
+  const fb = feedbacks[qNum];
+  document.getElementById('fb' + qNum).textContent = (choice === answers[qNum]) ? fb[answers[qNum]] : fb.wrong;
+  if (Object.keys(answered).length === QUIZ_TOTAL) showScore();
+}
+
+function showScore() {
+  const el = document.getElementById('quiz-score');
+  el.style.display = 'block';
+  document.getElementById('score-display').textContent = score + ' / ' + QUIZ_TOTAL;
+  const ratio = score / QUIZ_TOTAL;
+  let msg;
+  if (ratio === 1) msg = 'Parfait ! Toutes les réponses sont correctes.';
+  else if (ratio >= .8) msg = 'Très bien ! Vous maîtrisez l\'essentiel.';
+  else if (ratio >= .6) msg = 'Pas mal ! Relisez les points manqués.';
+  else if (ratio >= .4) msg = 'Quelques notions à revoir.';
+  else msg = 'Revoyez le cours avant de continuer.';
+  document.getElementById('score-msg').textContent = msg;
+}
+
+function restartQuiz() {
+  score = 0; answered = {};
+  document.getElementById('quiz-score').style.display = 'none';
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.disabled = false;
+    btn.classList.remove('correct','wrong');
+  });
+  document.querySelectorAll('.quiz-feedback').forEach(fb => fb.textContent = '');
+}
+</script>
+</body>
+</html>
