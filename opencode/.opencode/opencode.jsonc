@@ -10,12 +10,13 @@
       }
     }
   },
+  // configuration du provider local Ollama LAN
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Ollama LAN",
       "options": {
-        "baseURL": "http://192.168.44.73:11434/v1",
+        "baseURL": "http://{env:OLLAMA_HOST}:11434/v1",
         "timeout": 600000
       },
       "models": {

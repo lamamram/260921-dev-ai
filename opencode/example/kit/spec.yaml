@@ -1,0 +1,83 @@
+# Kit sandbox (Docker Sandboxes) : ajoute le SDK .NET à l'agent opencode
+#
+# Ce kit est un "mixin" appliqué par-dessus le template intégré `opencode`
+# (basé sur Ubuntu). Il remplace l'ancienne approche par Dockerfile : au lieu
+# de construire une image, on déclare ici les commandes d'installation
+# exécutées une seule fois à la création du sandbox (microVM).
+#
+# Utilisation depuis .\opencode :
+#   sbx run opencode --kit ./example/kit/
+#
+# Doc de référence : https://docs.docker.com/ai/sandboxes/customize/kits/
+
+schemaVersion: "2"
+kind: mixin
+name: dotnet-sandbox
+description: |
+  Installe le SDK .NET (dotnet-install.sh) pour builder/exécuter le projet
+  C# d'exemple (example/ECommerce.Api) dans le sandbox opencode.
+
+setup:
+  install:
+    - command: |
+        set -e
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends ca-certificates curl
+        curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh
+        chmod +x /tmp/dotnet-install.sh
+        sudo /tmp/dotnet-install.sh --channel 10.0 --install-dir /opt/dotnet
+        rm /tmp/dotnet-install.sh
+        sudo ln -sf /opt/dotnet/dotnet /usr/local/bin/dotnet
+
+# credentials:
+#   - service: github
+#     description: GitHub personal access token for the GitHub MCP server.
+#     apiKey:
+#       name: GITHUB_TOKEN
+#       proxyManaged: true
+#       inject:
+#         - domain: api.githubcopilot.com
+#           scheme: bearer
+
+
+# permissions:
+#   network:
+#     allow:
+#       - api.githubcopilot.com
+#       - api.github.com
+#       - github.com
+#       - raw.githubusercontent.com
+#       - gitlab.com
+#       - registry.npmjs.org
+#       - pypi.org
+#       - files.pythonhosted.org
+#       - astral.sh
+#       - openrouter.ai
+#       - registry-1.docker.io
+#       - auth.docker.io
+#       - production.cloudflare.docker.com
+#       - archive.ubuntu.com
+#       - security.ubuntu.com
+#       - ports.ubuntu.com
+#       - deb.debian.org
+#       - security.debian.org
+
+environment:
+  variables:
+    DOTNET_ROOT: /opt/dotnet
+    DOTNET_NOLOGO: "1"
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    OLLAMA_HOST: "192.168.4.73"
+
+ports:
+  - container: 5000
+    name: "web"
+
+agentInstructions:
+  content: |
+    Le SDK .NET est installé (vérifier avec `dotnet --version`).
+    Le projet d'exercice se trouve dans `example/ECommerce.Api` (API minimale
+    ASP.NET Core, catalogue/panier/commandes en mémoire, aucune base de données).
+
+    Lancer l'API :
+      cd example/ECommerce.Api && dotnet run --urls http://0.0.0.0:5000
