@@ -36,23 +36,36 @@
     // peuvent être surchargés par des permissions d'agents
     "*": "ask",
     "edit": {
-      "*": "ask"
+      "*": "ask",
+      "example/ECommerce.Api/*.cs": "allow",
+      "example/ECommerce.Tests/*.cs": "allow"
     },
     // gestion des fichiers sensibles obligatoire si pas chiffrement !!!
     "read": {
       "*": "allow",
-      ".env.*": "deny",
+      ".env*": "deny",
       ".env.schema": "allow"
     },
     "bash": {
       "*": "ask",
-      "git diff*": "allow",
+      "ls *": "allow",
+      "git *": "allow",
+      "git push*": "ask",
+      "cat *": "allow",
       "cat .env.*": "deny"
+    },
+    "glob": {
+      "*": "allow",
+      ".env*": "deny"
+    },
+    "grep": {
+      "*": "allow",
+      ".env*": "deny"
     },
     "task": "allow",
     "skill": {
-      "*": "ask"
+      "*": "allow"
     },
-    "webfetch": "ask"
+    "webfetch": "allow"
   }
 }
