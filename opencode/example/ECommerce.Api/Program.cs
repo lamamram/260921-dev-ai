@@ -81,3 +81,6 @@ app.MapPost("/orders/checkout", () =>
 app.MapGet("/orders", () => orders);
 
 app.Run();
+
+// Expose le type Program pour les tests d'intégration (WebApplicationFactory).
+public partial class Program { }

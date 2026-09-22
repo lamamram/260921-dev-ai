@@ -11,23 +11,25 @@
     }
   },
   // configuration du provider local Ollama LAN
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama LAN",
-      "options": {
-        "baseURL": "http://{env:OLLAMA_HOST}:11434/v1",
-        "timeout": 600000
-      },
-      "models": {
-        "qwen3.5:4b": {
-          "name": "qwen3.5:4b (local)"
-        }
-      }
-    }
-  },
-  "model": "ollama/qwen3.5:4b",
-  "small_model": "ollama/qwen3.5:4b",
+  // "provider": {
+  //   "ollama": {
+  //     "npm": "@ai-sdk/openai-compatible",
+  //     "name": "Ollama LAN",
+  //     "options": {
+  //       "baseURL": "http://{env:OLLAMA_HOST}:11434/v1",
+  //       "timeout": 600000
+  //     },
+  //     "models": {
+  //       "qwen3.5:4b": {
+  //         "name": "qwen3.5:4b (local)"
+  //       }
+  //     }
+  //   }
+  // },
+  // "model": "ollama/qwen3.5:4b",
+  // "small_model": "ollama/qwen3.5:4b",
+  "model": "opencode/big-pickle",
+  "small_model": "opencode/big-pickle",
   "share": "disabled",
   "permission": {
     // comportement par défaut pour les agents et les skills

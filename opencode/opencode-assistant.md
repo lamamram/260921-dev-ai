@@ -83,6 +83,10 @@
 * Cela génère un fichier `AGENTS.md` à la racine — **committez-le** dans Git.
 * < 300 lignes, contient les informations globale du projet, toujours charger dans les Prompts, quelque soit la sessions
 
+> vous pouvez consulter un boilerplate avec opencode avec dépôt
+> https://github.com/orionpax1997/kickstart.opencode.git
+
+
 ### Structure de fichiers recommandée pour une équipe
 
 ```
