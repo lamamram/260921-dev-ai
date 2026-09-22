@@ -20,19 +20,19 @@ x-labels:
 
 x-ollama: &service-ollama
   <<: *default-service
-  # image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.30.11}"
-  image: ollama/ollama:${OLLAMA_VERSION:-0.32.15}
-  # image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.9}"
-  # build:
-  #   context: ./ollama_img
-  #   args:
-  #     OLLAMA_VERSION: ${OLLAMA_VERSION:-0.9.1-rc0}
+  # image: ollama/ollama:${OLLAMA_VERSION:-0.34.2}
+  image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.34.2}"
+  build:
+    context: ./ollama_img
+    args:
+      OLLAMA_VERSION: ${OLLAMA_VERSION:-0.34.2}
   hostname: ollama
   container_name: ollama
   ports:
     - "0.0.0.0:11434:11434"
   volumes:
     - ollama:/home/ollama/.ollama
+    - ./workspace:/workspace
   networks:
     - dawan-ollama
 
