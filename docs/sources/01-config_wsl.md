@@ -55,9 +55,10 @@ Créez `%UserProfile%\.wslconfig` :
 
 ```ini
 [wsl2]
-memory=48GB
-processors=10
+memory=24GB
+processors=6
 swap=12GB
+defaultVhdSize=60000000000
 localhostForwarding=true
 ```
 

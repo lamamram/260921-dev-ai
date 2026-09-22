@@ -3,6 +3,7 @@
 # MODEL=xxxxxx docker compose --profile gpu-nvidia restart yyyyy
 # MODEL=xxxxxx docker compose run --rm --no-deps zzzzz
 # exemple de chargement de modèle individuel MODEL=dolphin-mistral:7b docker compose run --rm --no-deps init-ollama-gpu-nvidia
+# même chose powershell: $env:MODEL="dolphin-mistral:7b"; docker compose run --rm --no-deps init-ollama-gpu-nvidia
 
 x-service: &default-service
   restart: 'unless-stopped'
@@ -36,14 +37,12 @@ x-ollama: &service-ollama
     - dawan-ollama
 
 x-init-ollama: &init-ollama
-  # image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.9}"
-  image: ollama/ollama:${OLLAMA_VERSION:-0.32.15}
-  # image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.3.11}"
-  # build:
-  #   context: ./ollama_img
-  #   args:
-  #     # OLLAMA_VERSION: ${OLLAMA_VERSION:-0.9.1-rc0}
-  #     OLLAMA_VERSION: ${OLLAMA_VERSION:-0.30.11}
+  # image: ollama/ollama:${OLLAMA_VERSION:-0.34.2}
+  image: "dawan_ollama:${DAWAN_OLLAMA_VERSION:-0.34.2}"
+  build:
+    context: ./ollama_img
+    args:
+      OLLAMA_VERSION: ${OLLAMA_VERSION:-0.34.2}
   hostname: init-ollama
   container_name: init-ollama
   restart: "no"
