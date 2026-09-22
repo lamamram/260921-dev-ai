@@ -42,12 +42,10 @@
 
 * lancer le sandbox contenant **opencode**
 
-`sbx run opencode --publish 15080:15080 --name opencode-sandbox`
+`sbx run opencode --name formation --memory 8g`
 
-* manager les règles d'accès entrées/sorties du sandbox avec `sbx tui`
-* exécuter dans le sandbox `sbx exec -it <sandbox_name> bash`
-  ou dans le tui avec la touche `x` dans la liste des sandboxes
-* `--publish 15080:15080` permet d'accéder à l'interface web du sandbox sur le port 15080 de l'hôte (localhost:15080)
+* publications de ports : `--publish 5000:5000` pour exposer le port 5000 du sandbox sur le host
+
 
 ### se connecter à un provider LLM
 
@@ -55,6 +53,20 @@
   - les clés api sont stockées dans `~/.local/share/opencode/auth.json` (ou `%APPDATA%\opencode\auth.json` sur Windows)
 
 * pour un llm local, utiliser la configuration `dans ~/.config/opencode/opencode.json` 
+
+
+### utilisation d'un kit sandbox pour installer
+
+* le fichier `example/kit/spec.yaml` est un kit sandbox qui installe l'environnement de développement dans le sandbox `formation`
+
+* détermine 
+  - les variables d'environnement
+  - les ports exposés
+  - les instructions à exécuter après l'installation
+  - injections de credentials
+  - injections de dossiers montés dans le sandbox
+
+* utilisation `sbx run opencode --name ... --kit ./example/kit/` pour lancer le sandbox avec le kit
 
 ### Initialiser le projet avec OpenCode
 
