@@ -1,0 +1,55 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "mcp-gateway": {
+      "type": "remote",
+      "url": "http://mcp-gateway.docker.internal/mcp",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer proxy-managed"
+      }
+    }
+  },
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama LAN",
+      "options": {
+        "baseURL": "http://192.168.44.73:11434/v1",
+        "timeout": 600000
+      },
+      "models": {
+        "qwen3.5:4b": {
+          "name": "qwen3.5:4b (local)"
+        }
+      }
+    }
+  },
+  "model": "ollama/qwen3.5:4b",
+  "small_model": "ollama/qwen3.5:4b",
+  "share": "disabled",
+  "permission": {
+    // comportement par défaut pour les agents et les skills
+    // peuvent être surchargés par des permissions d'agents
+    "*": "ask",
+    "edit": {
+      "*": "ask"
+    },
+    // gestion des fichiers sensibles obligatoire si pas chiffrement !!!
+    "read": {
+      "*": "allow",
+      ".env.*": "deny",
+      ".env.schema": "allow"
+    },
+    "bash": {
+      "*": "ask",
+      "git diff*": "allow",
+      "cat .env.*": "deny"
+    },
+    "task": "allow",
+    "skill": {
+      "*": "ask"
+    },
+    "webfetch": "ask"
+  }
+}
