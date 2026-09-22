@@ -68,6 +68,12 @@
 
 * utilisation `sbx run opencode --name ... --kit ./example/kit/` pour lancer le sandbox avec le kit
 
+
+* se "connecter dans le sandbox": `sbx exec -it formation -- bash`
+
+
+![Schéma du sandbox](sandbox_schema.png)
+
 ### Initialiser le projet avec OpenCode
 
 ```bash
