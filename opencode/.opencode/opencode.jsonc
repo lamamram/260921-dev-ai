@@ -9,6 +9,11 @@
       "headers": {
         "Authorization": "Bearer proxy-managed"
       }
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true
     }
   },
   // configuration du provider local Ollama LAN
@@ -69,6 +74,9 @@
     "skill": {
       "*": "allow"
     },
-    "webfetch": "allow"
+    "webfetch": "allow",
+    // tools des MCPs
+    //"context7_query-doc": "allow",
+    "context7_*": "allow"
   }
 }
