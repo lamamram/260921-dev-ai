@@ -8,10 +8,10 @@ var app = builder.Build();
 // --- Données en mémoire (à remplacer par une vraie persistance dans les exercices) ---
 var products = new List<Product>
 {
-    new(1, "Clavier mécanique", 79.90m, 25),
-    new(2, "Souris sans fil", 29.90m, 40),
-    new(3, "Écran 27\" 4K", 349.00m, 10),
-    new(4, "Casque audio", 59.90m, 15),
+    new(1, "Clavier mécanique", 79.90m, 25, "informatique"),
+    new(2, "Souris sans fil", 29.90m, 40, "informatique"),
+    new(3, "Écran 27\" 4K", 349.00m, 10, "informatique"),
+    new(4, "Casque audio", 59.90m, 15, "audio"),
 };
 
 var cart = new List<CartItem>();
@@ -21,7 +21,10 @@ var nextOrderId = 1;
 // --- Endpoints ---
 app.MapGet("/", () => "ECommerce demo API — voir /products, /cart, /orders");
 
-app.MapGet("/products", () => products);
+app.MapGet("/products", (string? category) =>
+    string.IsNullOrWhiteSpace(category)
+        ? products
+        : products.Where(p => p.Category == category));
 
 app.MapGet("/products/{id:int}", (int id) =>
     products.FirstOrDefault(p => p.Id == id) is { } product

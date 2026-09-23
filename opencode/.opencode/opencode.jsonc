@@ -37,7 +37,6 @@
     // peuvent être surchargés par des permissions d'agents
     "*": "ask",
     "edit": {
-      "*": "ask",
       "example/ECommerce.Api/*.cs": "allow",
       "example/ECommerce.Api/**/*.cs": "allow",
       "example/ECommerce.Tests/**/*.cs": "allow"
@@ -49,7 +48,7 @@
       ".env.schema": "allow"
     },
     "bash": {
-      "*": "ask",
+      "tail *": "allow",
       "ls*": "allow",
       "find*": "allow",
       "git *": "allow",
