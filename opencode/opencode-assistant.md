@@ -408,6 +408,20 @@ permission:
 
 > :bulb: REM: un mcp utilsant des images/docker doit consommer plus de ressources(tokens).
 
+
+### injection de token pour mcp (exemple github) depuis le host
+
+```powershell
+$secret = Read-Host -AsSecureString "Jeton du provider"
+$env:GH_TOKEN = [System.Net.NetworkCredential]::new('', $secret).Password
+Remove-Variable secret
+# ...
+sbx run opencode --name formation --memory 8g --publish 5000:5000 --kit .\example\kit\ --env GH_TOKEN=$env:GH_TOKEN
+```
+
+
+
+
 ---
 
 ## 5. Sous-agents spécialisés

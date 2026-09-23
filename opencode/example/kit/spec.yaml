@@ -38,7 +38,7 @@ setup:
 #   - service: github
 #     description: GitHub personal access token for the GitHub MCP server.
 #     apiKey:
-#       name: GITHUB_TOKEN
+#       name: GH_TOKEN
 #       proxyManaged: true
 #       inject:
 #         - domain: api.githubcopilot.com
@@ -73,6 +73,7 @@ environment:
     DOTNET_NOLOGO: "1"
     DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     OLLAMA_HOST: "192.168.4.73"
+    
 
 # ports:
 #   - container: 5000
