@@ -28,7 +28,12 @@ setup:
         sudo /tmp/dotnet-install.sh --channel 10.0 --install-dir /opt/dotnet
         rm /tmp/dotnet-install.sh
         sudo ln -sf /opt/dotnet/dotnet /usr/local/bin/dotnet
-
+  # TODO: faire fonctionner l'entrypoint
+  # startup:
+  #   - command:
+  #       - |
+  #         dotnet run --project example/ECommerce.Api/ECommerce.Api.csproj --urls http://0.0.0.0:5000
+        
 # credentials:
 #   - service: github
 #     description: GitHub personal access token for the GitHub MCP server.

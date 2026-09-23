@@ -71,6 +71,8 @@
 
 * se "connecter dans le sandbox": `sbx exec -it formation -- bash`
 
+* lancer un projet (exemple): `sbx exec formation -- dotnet run --project example/ECommerce.Api/ECommerce.Api.csproj --urls http://0.0.0.0:5000`
+
 
 ![Schéma du sandbox](sandbox_schema.png)
 
