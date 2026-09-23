@@ -12,6 +12,7 @@ Docs, commentaires et modèles du dépôt sont en **français** : écrire tout t
 - `.opencode/opencode.jsonc` — config OpenCode (il n'y a pas de `opencode.json` à la racine).
   Toute modification de config nécessite un redémarrage d'OpenCode.
 - `example/ECommerce.Tests/` — projet de tests xUnit minimal, avec FluentAssertions et NSubstitute.
+- `example/specs/` — dossier contenant les spécifications détaillées en markdown.
 
 ## Commandes
 
